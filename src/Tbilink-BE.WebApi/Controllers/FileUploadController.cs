@@ -14,18 +14,18 @@ namespace Tbilink_BE.Controllers
             _fileUploadService = fileUploadService;
         }
 
-        [HttpPost()]
-        public async Task<IActionResult> UploadPhoto(IFormFile file, string path)
-        {
-            try
-            {
-                var url = await _fileUploadService.UploadFile(file, path);
-                return Ok(new { url });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        //[HttpPost()]
+        //public async Task<IActionResult> UploadPhoto(IFormFile file, string path)
+        //{
+        //    try
+        //    {
+        //        var url = await _fileUploadService.UploadFile(file, path);
+        //        return Ok(new { url });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
     }
 }

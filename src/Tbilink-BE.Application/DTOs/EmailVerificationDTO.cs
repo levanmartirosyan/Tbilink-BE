@@ -6,7 +6,7 @@ namespace Tbilink_BE.Application.DTOs
     public class RequestVerificationDTO
     {
         public int UserId { get; set; }
-        public string CodeHash { get; set; }
+        public required string CodeHash { get; set; }
         public DateTime ExpiresAt { get; set; }
         public CodeType CodeType { get; set; }
         public bool IsVerified { get; set; }
@@ -15,7 +15,7 @@ namespace Tbilink_BE.Application.DTOs
 
     public class VerifyEmailDTO
     {
-        public int UserId { get; set; }
-        public string Code { get; set; }
+        public required string Email { get; set; }
+        public required string Code { get; set; }
     }
 }

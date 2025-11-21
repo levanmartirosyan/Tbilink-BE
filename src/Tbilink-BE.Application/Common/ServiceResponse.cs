@@ -5,7 +5,7 @@
         public T? Data { get; set; }
         public bool IsSuccess { get; set; }
         public int StatusCode { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         private ServiceResponse(
             T? data,
@@ -19,7 +19,7 @@
             Message = message;
         }
 
-        public static ServiceResponse<T> Success(T data, string? message, int statusCode = 200)
+        public static ServiceResponse<T> Success(T? data, string? message, int statusCode = 200)
         {
             return new ServiceResponse<T>(
                 data: data,
@@ -29,10 +29,10 @@
             );
         }
 
-        public static ServiceResponse<T> Fail(string message, int statusCode = 400)
+        public static ServiceResponse<T> Fail(T? data, string message, int statusCode = 400)
         {
             return new ServiceResponse<T>(
-                data: default,
+                data: data,
                 isSuccess: false,
                 statusCode: statusCode,
                 message:  message 

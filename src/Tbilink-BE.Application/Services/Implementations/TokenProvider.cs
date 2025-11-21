@@ -33,7 +33,6 @@ internal sealed class TokenProvider : ITokenProvider
         {
             Subject = new ClaimsIdentity(
             [
-                new Claim(JwtRegisteredClaimNames.Sub, userDTO.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, userDTO.Email ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("username", userDTO.UserName ?? ""),

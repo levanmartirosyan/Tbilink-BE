@@ -18,6 +18,13 @@ namespace Tbilink_BE.Application.Common
             return Convert.ToBase64String(hash);
         }
 
+        public static bool VerifyHash(string plainText, string storedHash)
+        {
+            var newHash = HashCode(plainText); 
+                                              
+            return newHash.Equals(storedHash, StringComparison.Ordinal);
+        }
+
         public static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512())

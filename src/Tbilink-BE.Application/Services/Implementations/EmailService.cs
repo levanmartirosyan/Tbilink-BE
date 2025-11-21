@@ -41,7 +41,7 @@ namespace Tbilink_BE.Services.Implementations
             }
             catch (Exception ex)
             {
-                return ServiceResponse<bool>.Fail($"Email sending failed: {ex.Message}");
+                return ServiceResponse<bool>.Fail(false, $"Email sending failed: {ex.Message}");
             }
 
         }

@@ -29,11 +29,8 @@ namespace Tbilink_BE.Infrastructure
             // MediatR
             //builder.Services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly));
 
-
-
-            // Jwt authentication
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
 
             var jwtSettings = builder.Configuration
                 .GetSection("JwtSettings")

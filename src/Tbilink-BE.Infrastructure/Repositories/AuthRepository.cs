@@ -16,17 +16,12 @@ namespace Tbilink_BE.Infrastructure.Repositories
             _db = db;
         }
 
-        public async Task<User> GetUserByEmail(string email)
-        {
-            return await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower()); ;
-        }
-
         public async Task RegisterUser(User newUser)
         {
             await _db.Users.AddAsync(newUser);
         }
 
-        public async Task RecoverPassword(User user, byte[] passwordHash, byte[] passwordSalt)
+        public void RecoverPassword(User user, byte[] passwordHash, byte[] passwordSalt)
         {
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
@@ -34,7 +29,7 @@ namespace Tbilink_BE.Infrastructure.Repositories
             _db.Users.Update(user);
         }
 
-        public async Task SaveRefreshToken(User user, string refreshToken, DateTime expirationDate)
+        public void SaveRefreshToken(User user, string refreshToken, DateTime expirationDate)
         {
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpires = expirationDate;
@@ -47,9 +42,19 @@ namespace Tbilink_BE.Infrastructure.Repositories
             return await _db.EmailVerifications.FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
-        public async Task AddEmailVerificationRecords(EmailVerification record)
+        public async Task AddEmailVerificationRecord(EmailVerification record)
         {
             await _db.EmailVerifications.AddAsync(record);
+        }
+
+        public void UpdateEmailVerificationRecord(EmailVerification record)
+        {
+            _db.EmailVerifications.Update(record);
+        }
+
+        public void RemoveEmailVerificationRecord(EmailVerification record)
+        {
+            _db.EmailVerifications.Remove(record);
         }
 
         public async Task<bool> UserExistCheck(string userEmail)

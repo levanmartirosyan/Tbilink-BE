@@ -19,7 +19,7 @@ namespace Tbilink_BE.Controllers
             _authService = authService;
         }
 
-        [HttpPost("login")]
+        [HttpPost("signin")]
         public async Task<ActionResult<ServiceResponse<string>>> Login(LoginDTO loginDTO)
         {
             var response = await _authService.Login(loginDTO);
@@ -27,7 +27,7 @@ namespace Tbilink_BE.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpPost("register")]
+        [HttpPost("signup")]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
             var response = await _authService.Register(registerDTO);
@@ -43,17 +43,18 @@ namespace Tbilink_BE.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        //[HttpPost("verify-email")]
-        //public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDTO request)
-        //{
-        //    var response = await _authService.VerifyEmail(request.Email, request.Code);
-        //    return response.IsSuccess ? Ok(response) : BadRequest(response);
-        //}
-
-        [HttpPost("verify-username")]
-        public async Task<IActionResult> VerifyUsername([FromBody] VerifyUsernameDTO usernameDTO)
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDTO request)
         {
-            var response = await _authService.VerifyUsername(usernameDTO);
+            var response = await _authService.VerifyEmail(request.Email, request.Code);
+
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> CreateNewPassword([FromBody] CreateNewPasswordDTO request)
+        {
+            var response = await _authService.CreateNewPassword(request);
 
             return StatusCode(response.StatusCode, response);
         }

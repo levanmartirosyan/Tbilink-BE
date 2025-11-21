@@ -2,7 +2,7 @@
 {
     public class LoginResultDto
     {
-        public AuthTokensDTO Tokens { get; set; } = default!;
+        public AuthTokensDTO? Tokens { get; set; } = default!;
         public UserDTO Data { get; set; } = default!;
     }
 }
