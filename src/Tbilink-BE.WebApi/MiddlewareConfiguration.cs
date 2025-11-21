@@ -28,7 +28,12 @@ namespace Tbilink_BE.WebApi
 
             app.MapOpenApi();
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "swagger";
+
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tbilink API V1");
+            });
 
             app.UseCors("AppCorsPolicy");
 
@@ -36,7 +41,7 @@ namespace Tbilink_BE.WebApi
             //app.UseRequestLocalization(localizationOptions);
             //app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseAuthorization();
 
             app.UseAuthentication();
