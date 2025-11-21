@@ -36,9 +36,9 @@ namespace Tbilink_BE.Controllers
         }
 
         [HttpPost("send-verification-code")]
-        public async Task<IActionResult> RequestVerification(string email, CodeType codeType)
+        public async Task<IActionResult> SendVerificationCode([FromBody] SendVerificationCodeDTO sendVerificationCodeDTO)
         {
-            var response = await _authService.SendtVerificationCode(email, codeType);
+            var response = await _authService.SendtVerificationCode(sendVerificationCodeDTO);
 
             return StatusCode(response.StatusCode, response);
         }

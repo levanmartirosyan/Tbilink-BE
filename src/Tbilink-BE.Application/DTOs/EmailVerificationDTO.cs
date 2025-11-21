@@ -3,14 +3,10 @@ using Tbilink_BE.Models;
 
 namespace Tbilink_BE.Application.DTOs
 {
-    public class RequestVerificationDTO
+    public class SendVerificationCodeDTO
     {
-        public int UserId { get; set; }
-        public required string CodeHash { get; set; }
-        public DateTime ExpiresAt { get; set; }
+        public required string Email { get; set; }
         public CodeType CodeType { get; set; }
-        public bool IsVerified { get; set; }
-        public User? User { get; set; }
     }
 
     public class VerifyEmailDTO

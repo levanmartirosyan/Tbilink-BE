@@ -192,7 +192,13 @@ namespace Tbilink_BE.Services.Implementations
                 return ServiceResponse<RegisterResultDTO>.Fail(null, "Failed to create user.", 500);
             }
 
-            var senderResponse = await SendtVerificationCode(registerDTO.Email, CodeType.EmailVerification);
+            var sendCodeBody = new SendVerificationCodeDTO
+            {
+                Email = registerDTO.Email,
+                CodeType = CodeType.EmailVerification
+            };
+
+            var senderResponse = await SendtVerificationCode(sendCodeBody);
 
             if (senderResponse != null)
             {
@@ -218,27 +224,27 @@ namespace Tbilink_BE.Services.Implementations
             return ServiceResponse<RegisterResultDTO>.Success(response, "User created successfully.", 201);
         }
 
-        public async Task<ServiceResponse<string>> SendtVerificationCode(string email, CodeType codeType)
+        public async Task<ServiceResponse<string>> SendtVerificationCode(SendVerificationCodeDTO sendVerificationCodeDTO)
         {
 
-            if (string.IsNullOrWhiteSpace(email) || !ValidationHelper.IsValidEmail(email))
+            if (string.IsNullOrWhiteSpace(sendVerificationCodeDTO.Email) || !ValidationHelper.IsValidEmail(sendVerificationCodeDTO.Email))
             {
                 return ServiceResponse<string>.Fail(null, "Invalid email format.");
             }
 
-            if (codeType != CodeType.EmailVerification && codeType != CodeType.PasswordRecovery)
+            if (sendVerificationCodeDTO.CodeType != CodeType.EmailVerification && sendVerificationCodeDTO.CodeType != CodeType.PasswordRecovery)
             {
                 return ServiceResponse<string>.Fail(null, "Invalid code type.");
             }
 
-            var userExists = await _userRepository.GetUserByEmail(email.Trim());
+            var userExists = await _userRepository.GetUserByEmail(sendVerificationCodeDTO.Email.Trim());
 
             if (userExists == null)
             {
                 return ServiceResponse<string>.Fail(null, "User not found.", 404);
             }
 
-            if (userExists.IsEmailVerified && codeType == CodeType.EmailVerification)
+            if (userExists.IsEmailVerified && sendVerificationCodeDTO.CodeType == CodeType.EmailVerification)
             {
                 return ServiceResponse<string>.Fail(null, "User email is already verified.", 409);
             }
@@ -263,7 +269,7 @@ namespace Tbilink_BE.Services.Implementations
                 UserId = userExists.Id,
                 CodeHash = codeHash,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(5),
-                CodeType = codeType,
+                CodeType = sendVerificationCodeDTO.CodeType,
                 IsVerified = false
             };
 

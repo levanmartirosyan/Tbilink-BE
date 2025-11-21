@@ -8,7 +8,7 @@ namespace Tbilink_BE.Application.Services.Interfaces
     {
         public Task<ServiceResponse<RegisterResultDTO>> Register(RegisterDTO registerDTO);
         public Task<ServiceResponse<LoginResultDto>> Login(LoginDTO loginDTO);
-        public Task<ServiceResponse<string>> SendtVerificationCode(string email, CodeType codeType);
+        public Task<ServiceResponse<string>> SendtVerificationCode(SendVerificationCodeDTO sendVerificationCodeDTO);
         public Task<ServiceResponse<EmailVerificationResultDTO>> VerifyEmail(string email, string code);
         public Task<ServiceResponse<CreateNewPasswordDTO>> CreateNewPassword(CreateNewPasswordDTO createNewPasswordDTO);
     }
