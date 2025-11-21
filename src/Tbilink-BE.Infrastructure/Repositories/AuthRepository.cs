@@ -52,7 +52,6 @@ namespace Tbilink_BE.Infrastructure.Repositories
             await _db.EmailVerifications.AddAsync(record);
         }
 
-
         public async Task<bool> UserExistCheck(string userEmail)
         {
             return await _db.Users.AnyAsync(u => u.Email.ToLower() == userEmail.ToLower()); ;
