@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 
@@ -12,7 +12,7 @@ RUN dotnet restore ./src/Tbilink-BE.WebApi/Tbilink-BE.WebApi.csproj
 COPY . .
 RUN dotnet publish ./src/Tbilink-BE.WebApi/Tbilink-BE.WebApi.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
 COPY --from=build /app/publish .
