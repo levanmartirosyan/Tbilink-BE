@@ -42,7 +42,7 @@ namespace Tbilink_BE.Infrastructure
                 {
                     options.ClaimsIssuer = jwtSettings.Issuer;
                     options.Audience = jwtSettings.Audience;
-                    options.MapInboundClaims = false;
+                    options.MapInboundClaims = true;
 
                     options.TokenValidationParameters = new TokenValidationParameters
                     {

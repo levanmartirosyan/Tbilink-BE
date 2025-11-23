@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Tbilink_BE.Application.Services.Implementations;
 using Tbilink_BE.Application.Services.Interfaces;
 using Tbilink_BE.Models;
 using Tbilink_BE.Services.Implementations;
@@ -15,6 +16,7 @@ namespace Tbilink_BE.Application
 
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IFileUploadService, FileUploadService>();
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 

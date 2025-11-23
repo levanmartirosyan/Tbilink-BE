@@ -32,15 +32,33 @@ namespace Tbilink_BE.WebApi
                 });
             });
 
-            builder.Services.AddSwaggerGen(options =>
-                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "To authorize enter token like in this scheme: \" bearer {token} \"",
-                    In = ParameterLocation.Header,
+                    Description = "Enter 'Bearer {token}'",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey
-                })
-            );
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
         }
     }
 }

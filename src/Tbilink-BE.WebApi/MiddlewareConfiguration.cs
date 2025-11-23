@@ -42,9 +42,9 @@ namespace Tbilink_BE.WebApi
             //app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
             //app.UseHttpsRedirection();
-            app.UseAuthorization();
-
             app.UseAuthentication();
+
+            app.UseAuthorization();
 
             // For wwwroot
             //app.UseStaticFiles();

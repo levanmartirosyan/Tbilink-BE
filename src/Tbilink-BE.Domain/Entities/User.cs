@@ -16,6 +16,7 @@ namespace Tbilink_BE.Models
         public bool IsEmailVerified { get; set; } = false;
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpires { get; set; }
+        public bool IsRegistrationCompleted { get; set; } = false;
 
         // Auth
         public byte[] PasswordHash { get; set; }
