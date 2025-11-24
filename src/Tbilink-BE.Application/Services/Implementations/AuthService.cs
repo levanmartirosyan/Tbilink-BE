@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Options;
 using Tbilink_BE.Application.Common;
 using Tbilink_BE.Application.DTOs;
 using Tbilink_BE.Application.Repositories;
