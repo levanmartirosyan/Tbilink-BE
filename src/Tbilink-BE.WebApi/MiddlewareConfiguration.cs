@@ -47,7 +47,7 @@ namespace Tbilink_BE.WebApi
             app.UseAuthorization();
 
             // For wwwroot
-            //app.UseStaticFiles();
+            app.UseStaticFiles();
 
             app.MapControllers();
         }
