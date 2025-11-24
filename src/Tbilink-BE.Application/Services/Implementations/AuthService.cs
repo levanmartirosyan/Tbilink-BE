@@ -279,7 +279,7 @@ namespace Tbilink_BE.Services.Implementations
                 return ServiceResponse<string>.Fail(null, "Unable to add record to email verification table.", 500);
             }
 
-            var templatePath = Path.Combine(_env.ContentRootPath, "Resources/Templates", "EmailVerification.html");
+            var templatePath = Path.Combine(_env.ContentRootPath, "Resources", "Templates", "EmailVerification.html");
             var htmlTemplate = await File.ReadAllTextAsync(templatePath);
             var body = htmlTemplate.Replace("{{CODE}}", code);
 
