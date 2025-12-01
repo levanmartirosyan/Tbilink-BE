@@ -6,5 +6,6 @@ namespace Tbilink_BE.Application.Services.Interfaces
     public interface IUserService
     {
         public Task<ServiceResponse<User>> GetUserInfoByEmail(ClaimsPrincipal userPrincipal);
+        public Task<ServiceResponse<User>> GetUserInfoById(int userId);
     }
 }

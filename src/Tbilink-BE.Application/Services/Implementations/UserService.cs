@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.JsonWebTokens;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using Tbilink_BE.Application.Repositories;
 using Tbilink_BE.Application.Services.Interfaces;
@@ -26,6 +27,18 @@ namespace Tbilink_BE.Application.Services.Implementations
             }
                 
             var user = await _userRepository.GetUserByEmail(email);
+
+            if (user == null)
+            {
+                return ServiceResponse<User>.Fail(null, "User not found.", 404);
+            }
+
+            return ServiceResponse<User>.Success(user, "User data retrieved successfully.");
+        }
+
+        public async Task<ServiceResponse<User>> GetUserInfoById(int userId)
+        {
+            var user = await _userRepository.GetUserById(userId);
 
             if (user == null)
             {

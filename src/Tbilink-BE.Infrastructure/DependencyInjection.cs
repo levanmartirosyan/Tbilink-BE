@@ -31,6 +31,7 @@ namespace Tbilink_BE.Infrastructure
 
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IPostRepository, PostRepository>();
 
             var jwtSettings = builder.Configuration
                 .GetSection("JwtSettings")

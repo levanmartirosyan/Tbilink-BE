@@ -19,6 +19,7 @@ namespace Tbilink_BE.Application
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IFileUploadService, FileUploadService>();
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
+            builder.Services.AddScoped<IPostService, PostService>();
 
         }
     }

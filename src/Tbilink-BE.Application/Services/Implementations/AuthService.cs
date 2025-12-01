@@ -36,16 +36,16 @@ namespace Tbilink_BE.Services.Implementations
                 return ServiceResponse<LoginResultDto>.Fail(null, "Email and password are required.");
             }
 
+            if (!ValidationHelper.IsValidPassword(loginDTO.Password))
+            {
+                return ServiceResponse<LoginResultDto>.Fail(null, "Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character.");
+            }
+
             var userExist = await _userRepository.GetUserByEmail(loginDTO.Email.Trim());
 
             if (userExist == null)
             {
                 return ServiceResponse<LoginResultDto>.Fail(null, "Invalid Email or Password.", 404);
-            }
-
-            if (!ValidationHelper.IsValidPassword(loginDTO.Password))
-            {
-                return ServiceResponse<LoginResultDto>.Fail(null, "Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character.");
             }
 
             if (!OtpHelper.VerifyPasswordHash(loginDTO.Password, userExist.PasswordHash, userExist.PasswordSalt))
