@@ -37,9 +37,9 @@ namespace Tbilink_BE.WebApi.Controllers
 
         [HttpPost("create")]
         [Authorize]
-        public async Task<IActionResult> CreatePost([FromBody] PostDTO postDTO)
+        public async Task<IActionResult> CreatePost([FromBody] CreatePostDTO createPostDTO)
         {
-            var response = await _postService.CreatePost(postDTO);
+            var response = await _postService.CreatePost(createPostDTO);
 
             return StatusCode(response.StatusCode, response);
         }
