@@ -33,6 +33,8 @@ namespace Tbilink_BE.Infrastructure
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
 
+            builder.Services.AddSignalR();
+
             var jwtSettings = builder.Configuration
                 .GetSection("JwtSettings")
                 .Get<JwtSettings>() ?? throw new InvalidOperationException("JwtSettings missing");
@@ -57,6 +59,21 @@ namespace Tbilink_BE.Infrastructure
 
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (path.StartsWithSegments("/hubs")))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
         }

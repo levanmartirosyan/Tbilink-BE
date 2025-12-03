@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Tbilink_BE.Application.Common;
 using Tbilink_BE.Application.Services.Implementations;
 using Tbilink_BE.Application.Services.Interfaces;
 using Tbilink_BE.Models;
@@ -20,6 +21,12 @@ namespace Tbilink_BE.Application
             builder.Services.AddScoped<IFileUploadService, FileUploadService>();
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IPostService, PostService>();
+
+            builder.Services.Configure<SupabaseOptions>(builder.Configuration.GetSection("SupabaseStorage"));
+
+            builder.Services.AddHttpClient("supabase-storage");
+
+            builder.Services.AddScoped<IStorageService, StorageService>();
 
         }
     }

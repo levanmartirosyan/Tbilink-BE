@@ -1,4 +1,5 @@
-﻿using Tbilink_BE.Application.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using Tbilink_BE.Application.DTOs;
 using Tbilink_BE.Application.Repositories;
 using Tbilink_BE.Data;
 using Tbilink_BE.Models;
@@ -16,7 +17,7 @@ namespace Tbilink_BE.Infrastructure.Repositories
 
         public async Task<List<Post>> GetAllPosts()
         {
-            return _db.Posts.ToList();
+            return await _db.Posts.Include(p => p.User).ToListAsync();
         }
 
         public async Task<Post?> GetPostById(int postId) {

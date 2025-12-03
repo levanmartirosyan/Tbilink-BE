@@ -57,7 +57,7 @@ namespace Tbilink_BE.WebApi.Controllers
         [Authorize]
         public async Task<IActionResult> DeletePost(int postId)
         {
-            var response = await _postService.DeletePost(postId);
+            var response = await _postService.DeletePost(postId, User);
 
             return StatusCode(response.StatusCode, response);
         }

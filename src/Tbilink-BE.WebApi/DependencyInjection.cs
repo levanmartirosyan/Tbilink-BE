@@ -1,5 +1,6 @@
 ﻿using Microsoft.OpenApi.Models;
 using Tbilink_BE.Models;
+using Tbilink_BE.WebApi.signalR;
 
 namespace Tbilink_BE.WebApi
 {
@@ -58,7 +59,12 @@ namespace Tbilink_BE.WebApi
                         new string[] {}
                     }
                 });
+                c.SupportNonNullableReferenceTypes();
+                //c.OperationFilter<SwaggerFileUploadOperationFilter>();
             });
+
+            // Register UserTracker as singleton
+            builder.Services.AddSingleton<UserTracker>();
         }
     }
 }

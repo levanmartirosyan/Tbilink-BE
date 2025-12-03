@@ -33,6 +33,7 @@ internal sealed class TokenProvider : ITokenProvider
         {
             Subject = new ClaimsIdentity(
             [
+                new Claim(ClaimTypes.NameIdentifier, userDTO.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, userDTO.Email ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("username", userDTO.UserName ?? ""),
@@ -40,7 +41,7 @@ internal sealed class TokenProvider : ITokenProvider
                 new Claim("photo_url", userDTO.ProfilePhotoUrl ?? ""),
                 new Claim("email_verified", userDTO.IsEmailVerified.ToString()),
                 new Claim("first_name", userDTO.FirstName ?? ""),
-                new Claim("last_name", userDTO.LastName ?? "")
+                new Claim("last_name", userDTO.LastName ?? ""),
             ]),
             Expires = expiresAt,
             SigningCredentials = credentials,

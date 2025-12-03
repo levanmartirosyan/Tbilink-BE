@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Localization;
 using System.Globalization;
+using Tbilink_BE.WebApi.signalR;
 
 namespace Tbilink_BE.WebApi
 {
@@ -49,7 +50,10 @@ namespace Tbilink_BE.WebApi
             // For wwwroot
             //app.UseStaticFiles();
 
+
             app.MapControllers();
+
+            app.MapHub<UserHub>("/hubs/users");
         }
     }
 }

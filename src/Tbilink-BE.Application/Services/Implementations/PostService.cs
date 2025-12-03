@@ -1,4 +1,5 @@
-﻿using Tbilink_BE.Application.DTOs;
+﻿using System.Security.Claims;
+using Tbilink_BE.Application.DTOs;
 using Tbilink_BE.Application.Repositories;
 using Tbilink_BE.Application.Services.Interfaces;
 using Tbilink_BE.Models;
@@ -16,16 +17,31 @@ namespace Tbilink_BE.Application.Services.Implementations
             _userService = userService;
         }
 
-        public async Task<ServiceResponse<List<Post>>> GetAllPosts()
+        public async Task<ServiceResponse<List<PostWithUserDTO>>> GetAllPosts()
         {
            var posts = await _postRepository.GetAllPosts();
 
             if (!posts.Any())
             {
-                return ServiceResponse<List<Post>>.Fail(null, "No posts found.", 404);
+                return ServiceResponse<List<PostWithUserDTO>>.Fail(null, "No posts found.", 404);
             }
 
-            return ServiceResponse<List<Post>>.Success(posts, "Posts retrieved successfully.");
+            var postsWithUser = posts.Select(p => new PostWithUserDTO
+            {
+                Id = p.Id,
+                Content = p.Content,
+                ImageUrl = p.ImageUrl,
+                CreatedAt = p.CreatedAt,
+                LikeCount = p.LikeCount,
+                CommentCount = p.CommentCount,
+                Username = p.User.UserName,
+                FirstName = p.User.FirstName,
+                LastName = p.User.LastName,
+                Avatar = p.User.ProfilePhotoUrl,
+                UserId = p.User.Id
+            }).ToList();
+
+            return ServiceResponse<List<PostWithUserDTO>>.Success(postsWithUser, "Posts retrieved successfully.");
         }
 
         public async Task<ServiceResponse<Post?>> GetPostById(int postId)
@@ -98,7 +114,7 @@ namespace Tbilink_BE.Application.Services.Implementations
             return ServiceResponse<string>.Success(null, "Post updated successfully.");
         }
 
-        public async Task<ServiceResponse<string>> DeletePost(int postId)
+        public async Task<ServiceResponse<string>> DeletePost(int postId, ClaimsPrincipal currentUserPrincipal)
         {
             if (postId < 0)
             {
@@ -112,15 +128,17 @@ namespace Tbilink_BE.Application.Services.Implementations
                 return ServiceResponse<string>.Fail(null, "Post not found.", 404);
             }
 
-            var user = await _userService.GetUserInfoById(post.UserId);
+            var currentUserResponse = await _userService.GetUserInfoByEmail(currentUserPrincipal);
 
-            if (user.Data == null)
+            if (currentUserResponse.Data == null)
             {
-                return ServiceResponse<string>.Fail(null, "User not found.", 404);
+                return ServiceResponse<string>.Fail(null, "Current user not found.", 401);
             }
 
-            var isOwner = user.Data.Id == post.UserId;
-            var isAdminOrOwner = user.Data.Role == "Admin" || user.Data.Role == "Owner";
+            var currentUser = currentUserResponse.Data;
+
+            var isOwner = currentUser.Id == post.UserId;
+            var isAdminOrOwner = currentUser.Role == "Admin" || currentUser.Role == "Owner";
 
             if (!isOwner && !isAdminOrOwner)
             {

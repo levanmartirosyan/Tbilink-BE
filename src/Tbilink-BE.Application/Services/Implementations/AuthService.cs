@@ -71,6 +71,7 @@ namespace Tbilink_BE.Services.Implementations
 
             var userModel = new UserDTO
             {
+                Id = userExist.Id,
                 FirstName = userExist.FirstName,
                 LastName = userExist.LastName,
                 UserName = userExist.UserName,
