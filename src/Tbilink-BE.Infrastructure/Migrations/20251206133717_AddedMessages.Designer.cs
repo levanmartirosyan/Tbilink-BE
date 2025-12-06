@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tbilink_BE.Data;
@@ -11,9 +12,11 @@ using Tbilink_BE.Data;
 namespace Tbilink_BE.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251206133717_AddedMessages")]
+    partial class AddedMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,9 +85,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
                     b.Property<DateTime?>("DateRead")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("GroupName")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("MessageSent")
                         .HasColumnType("timestamp with time zone");
 
@@ -101,8 +101,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GroupName");
 
                     b.HasIndex("RecipientId");
 
@@ -380,10 +378,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
 
             modelBuilder.Entity("Tbilink_BE.Domain.Entities.Message", b =>
                 {
-                    b.HasOne("Tbilink_BE.Domain.Entities.Group", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupName");
-
                     b.HasOne("Tbilink_BE.Models.User", "Recipient")
                         .WithMany("MessageReceived")
                         .HasForeignKey("RecipientId")
@@ -395,8 +389,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Group");
 
                     b.Navigation("Recipient");
 

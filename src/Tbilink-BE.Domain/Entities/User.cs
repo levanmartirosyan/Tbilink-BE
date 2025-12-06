@@ -12,7 +12,7 @@ namespace Tbilink_BE.Models
         public string? Country { get; set; }
         public string? City { get; set; }
         public string? PhoneNumber { get; set; }
-        public DateTime RegisterDate { get; set; } = DateTime.Now;
+        public DateTime RegisterDate { get; set; } = DateTime.UtcNow;
         public bool IsEmailVerified { get; set; } = false;
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpires { get; set; }
@@ -36,6 +36,10 @@ namespace Tbilink_BE.Models
         public int PostCount { get; set; }
         public int FollowersCount { get; set; }
         public int FollowingCount { get; set; }
+
+        // Messaging
+        public List<Message> MessageSent { get; set; } = new List<Message>();
+        public List<Message> MessageReceived { get; set; } = new List<Message>();
 
         // Privacy Settings
         public bool IsPublicProfile { get; set; } = true;

@@ -54,6 +54,7 @@ namespace Tbilink_BE.WebApi
             app.MapControllers();
 
             app.MapHub<UserHub>("/hubs/users");
+            app.MapHub<MessageHub>("/hubs/messages");
         }
     }
 }

@@ -32,6 +32,7 @@ namespace Tbilink_BE.Infrastructure
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
+            builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
             builder.Services.AddSignalR();
 

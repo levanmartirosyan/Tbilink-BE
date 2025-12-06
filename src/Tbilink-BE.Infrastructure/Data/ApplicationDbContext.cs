@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tbilink_BE.Domain.Entities;
 using Tbilink_BE.Models;
 
 namespace Tbilink_BE.Data
@@ -10,6 +11,9 @@ namespace Tbilink_BE.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<UserPhoto> UserPhotos { get; set; }
         public DbSet<EmailVerification> EmailVerifications { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
@@ -41,6 +45,16 @@ namespace Tbilink_BE.Data
                 .HasOne(c => c.User)
                 .WithMany(u => u.Comments)
                 .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany(u => u.MessageSent)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Recipient)
+                .WithMany(u => u.MessageReceived)
                 .OnDelete(DeleteBehavior.Restrict);
         }
 
