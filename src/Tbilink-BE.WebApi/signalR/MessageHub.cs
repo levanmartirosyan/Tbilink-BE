@@ -46,13 +46,10 @@ namespace Tbilink_BE.WebApi.signalR
                 await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
                 await AddToGroup(groupName);
 
-                // Get existing message thread
                 var messages = await _messageRepository.GetMessageThreadAsync(currentUserId, recipientId);
 
-                // Send message history to the group
                 await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
 
-                // Auto-mark messages as read when user joins the chat
                 await MarkMessagesAsRead(recipientId);
 
                 _logger.LogInformation("User {UserId} connected to message group {GroupName}", currentUserId, groupName);
@@ -88,19 +85,17 @@ namespace Tbilink_BE.WebApi.signalR
                 var groupName = GetGroupName(sender.Id.ToString(), recipient.Id.ToString());
                 var group = await _messageRepository.GetMessageGroupAsync(groupName);
 
-                // Check if recipient is currently in the chat group (online in this specific chat)
                 var recipientInGroup = group?.Connections?.Any(x => x.UserId == message.RecipientId.ToString()) == true;
 
                 if (recipientInGroup)
                 {
-                    message.DateRead = DateTime.UtcNow; // Mark as read immediately if recipient is online in this chat
+                    message.DateRead = DateTime.UtcNow; 
                 }
 
                 _messageRepository.AddMessage(message);
 
                 if (await _messageRepository.SaveChangesAsync())
                 {
-                    // Create message DTO for response
                     var messageDto = new MessageDTO
                     {
                         Id = message.Id,
@@ -110,7 +105,6 @@ namespace Tbilink_BE.WebApi.signalR
                         MessageSent = message.MessageSent
                     };
 
-                    // Create enhanced message DTO with read status for the group
                     var enhancedMessageDto = new
                     {
                         Id = message.Id,
@@ -123,14 +117,11 @@ namespace Tbilink_BE.WebApi.signalR
                         IsRead = message.DateRead.HasValue
                     };
 
-                    // Send to everyone in the message group
                     await Clients.Group(groupName).SendAsync("NewMessage", enhancedMessageDto);
 
-                    // Update chat list for both users with new last message
                     await UpdateChatLastMessage(senderId, createMessageDto.RecipientId, messageDto);
                     await UpdateChatLastMessage(createMessageDto.RecipientId, senderId, messageDto);
 
-                    // If recipient is not in the chat group, send notification
                     if (!recipientInGroup)
                     {
                         await SendNotificationToUser(recipient, sender, messageDto);
@@ -172,7 +163,6 @@ namespace Tbilink_BE.WebApi.signalR
                     {
                         var groupName = GetGroupName(currentUserId.ToString(), otherUserId.ToString());
 
-                        // Notify the group that messages were marked as read
                         await Clients.Group(groupName).SendAsync("MessagesMarkedAsRead", new
                         {
                             MessageIds = unreadMessages.Select(m => m.Id).ToList(),
@@ -180,7 +170,6 @@ namespace Tbilink_BE.WebApi.signalR
                             ReadAt = DateTime.UtcNow
                         });
 
-                        // Update chat list with new unread count
                         await UpdateChatUnreadCount(currentUserId, otherUserId);
 
                         _logger.LogInformation("Marked {Count} messages as read for user {UserId}",
@@ -252,7 +241,6 @@ namespace Tbilink_BE.WebApi.signalR
         {
             try
             {
-                // Get user connections from presence hub
                 var userConnections = await UserTracker.GetConnectionsForUser(userId.ToString());
 
                 if (userConnections.Count > 0)
@@ -262,11 +250,9 @@ namespace Tbilink_BE.WebApi.signalR
                         ChatPartnerId = otherUserId,
                         LastMessage = lastMessage,
                         LastActivity = lastMessage.MessageSent,
-                        // Calculate unread count for this user
                         UnreadCount = await GetUnreadCountForUser(userId, otherUserId)
                     };
 
-                    // Send chat update to user via presence hub
                     await _presenceHub.Clients.Clients(userConnections)
                         .SendAsync("ChatUpdated", chatUpdateDto);
                 }
@@ -339,7 +325,6 @@ namespace Tbilink_BE.WebApi.signalR
                     await _presenceHub.Clients.Clients(recipientConnections)
                         .SendAsync("NewMessageReceived", notificationDto);
 
-                    // Also send a general notification
                     await _presenceHub.Clients.Clients(recipientConnections)
                         .SendAsync("NotificationReceived", notificationDto);
                 }
