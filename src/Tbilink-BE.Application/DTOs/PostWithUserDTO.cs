@@ -14,5 +14,7 @@
         public string LastName { get; set; } = null!;
         public string? Avatar { get; set; }
         public int UserId { get; set; }
+
+        public bool IsLikedByCurrentUser { get; set; }
     }
 }

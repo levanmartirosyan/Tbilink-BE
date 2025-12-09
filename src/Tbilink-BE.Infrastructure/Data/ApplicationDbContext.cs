@@ -14,6 +14,8 @@ namespace Tbilink_BE.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Connection> Connections { get; set; }
+        public DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<CommentLike> CommentLikes { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
@@ -30,10 +32,10 @@ namespace Tbilink_BE.Data
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Post>()
-                .HasMany(p => p.LikedByUsers)     
-                .WithMany(u => u.LikedPosts)      
-                .UsingEntity(j => j.ToTable("UserPostLikes")); 
+            //modelBuilder.Entity<Post>()
+            //    .HasMany(p => p.LikedByUsers)     
+            //    .WithMany(u => u.LikedPosts)      
+            //    .UsingEntity(j => j.ToTable("UserPostLikes")); 
 
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.Post)
@@ -56,6 +58,42 @@ namespace Tbilink_BE.Data
                 .HasOne(m => m.Recipient)
                 .WithMany(u => u.MessageReceived)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PostLike>(entity =>
+            {
+                entity.HasKey(pl => pl.Id);
+
+                entity.HasIndex(pl => new { pl.PostId, pl.UserId })
+                      .IsUnique();
+
+                entity.HasOne(pl => pl.Post)
+                      .WithMany(p => p.Likes)
+                      .HasForeignKey(pl => pl.PostId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(pl => pl.User)
+                      .WithMany(u => u.PostLikes)
+                      .HasForeignKey(pl => pl.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<CommentLike>(entity =>
+            {
+                entity.HasKey(cl => cl.Id);
+
+                entity.HasIndex(cl => new { cl.CommentId, cl.UserId })
+                      .IsUnique();
+
+                entity.HasOne(cl => cl.Comment)
+                      .WithMany(c => c.Likes)
+                      .HasForeignKey(cl => cl.CommentId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(cl => cl.User)
+                      .WithMany(u => u.CommentLikes)
+                      .HasForeignKey(cl => cl.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
     }

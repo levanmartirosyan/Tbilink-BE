@@ -12,6 +12,9 @@ namespace Tbilink_BE.Models
 
         public string Content { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int LikeCount { get; set; } = 0;
+        public List<CommentLike> Likes { get; set; } = new List<CommentLike>();
     }
 
 }

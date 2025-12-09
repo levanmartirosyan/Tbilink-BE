@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tbilink_BE.Data;
@@ -11,9 +12,11 @@ using Tbilink_BE.Data;
 namespace Tbilink_BE.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251209201501_AddedPostLikes")]
+    partial class AddedPostLikes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,33 +24,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Tbilink_BE.Domain.Entities.CommentLike", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CommentId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("LikedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("CommentId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("CommentLikes");
-                });
 
             modelBuilder.Entity("Tbilink_BE.Domain.Entities.Connection", b =>
                 {
@@ -164,9 +140,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("LikeCount")
-                        .HasColumnType("integer");
 
                     b.Property<int>("PostId")
                         .HasColumnType("integer");
@@ -399,25 +372,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
                     b.ToTable("UserPhotos");
                 });
 
-            modelBuilder.Entity("Tbilink_BE.Domain.Entities.CommentLike", b =>
-                {
-                    b.HasOne("Tbilink_BE.Models.Comment", "Comment")
-                        .WithMany("Likes")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Tbilink_BE.Models.User", "User")
-                        .WithMany("CommentLikes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Tbilink_BE.Domain.Entities.Connection", b =>
                 {
                     b.HasOne("Tbilink_BE.Domain.Entities.Group", "Group")
@@ -534,11 +488,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
                     b.Navigation("Connections");
                 });
 
-            modelBuilder.Entity("Tbilink_BE.Models.Comment", b =>
-                {
-                    b.Navigation("Likes");
-                });
-
             modelBuilder.Entity("Tbilink_BE.Models.Post", b =>
                 {
                     b.Navigation("Comments");
@@ -548,8 +497,6 @@ namespace Tbilink_BE.Infrastructure.Migrations
 
             modelBuilder.Entity("Tbilink_BE.Models.User", b =>
                 {
-                    b.Navigation("CommentLikes");
-
                     b.Navigation("Comments");
 
                     b.Navigation("LikedPosts");
