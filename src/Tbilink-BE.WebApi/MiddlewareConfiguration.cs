@@ -26,16 +26,15 @@ namespace Tbilink_BE.WebApi
         //    localizationOptions.RequestCultureProviders.Insert(0, new AcceptLanguageHeaderRequestCultureProvider());
 
             // Dev
-
             app.MapOpenApi();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "swagger";
-
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tbilink API V1");
             });
 
+            // CORS must be before authentication and authorization
             app.UseCors("AppCorsPolicy");
 
             // Middlewares
@@ -44,12 +43,10 @@ namespace Tbilink_BE.WebApi
 
             //app.UseHttpsRedirection();
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             // For wwwroot
             //app.UseStaticFiles();
-
 
             app.MapControllers();
 

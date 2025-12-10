@@ -32,6 +32,23 @@ namespace Tbilink_BE.WebApi.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpGet("chats/paginated")]
+        public async Task<IActionResult> GetUserChatsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var response = await _messageService.GetUserChatsPaginatedAsync(userId, pageNumber, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
+
         [HttpPost("send")]
         public async Task<IActionResult> SendMessage([FromBody] CreateMessageDTO createMessageDTO)
         {
@@ -48,6 +65,24 @@ namespace Tbilink_BE.WebApi.Controllers
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var response = await _messageService.GetMessageThreadAsync(int.Parse(userIdClaim), recipientId);
+
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("thread/{recipientId}/paginated")]
+        public async Task<IActionResult> GetMessageThreadPaginated(int recipientId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var response = await _messageService.GetMessageThreadPaginatedAsync(userId, recipientId, pageNumber, pageSize);
 
             return StatusCode(response.StatusCode, response);
         }

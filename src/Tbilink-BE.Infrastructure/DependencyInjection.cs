@@ -38,7 +38,22 @@ namespace Tbilink_BE.Infrastructure
 
             var jwtSettings = builder.Configuration
                 .GetSection("JwtSettings")
-                .Get<JwtSettings>() ?? throw new InvalidOperationException("JwtSettings missing");
+                .Get<JwtSettings>() ?? throw new InvalidOperationException("JwtSettings section not found in configuration");
+
+            if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
+            {
+                throw new InvalidOperationException("JwtSettings.SecretKey is missing or empty. Please configure a valid JWT secret key in appsettings.json or user secrets.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtSettings.Issuer))
+            {
+                throw new InvalidOperationException("JwtSettings.Issuer is missing or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtSettings.Audience))
+            {
+                throw new InvalidOperationException("JwtSettings.Audience is missing or empty.");
+            }
 
             builder.Services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

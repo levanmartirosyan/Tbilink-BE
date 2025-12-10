@@ -7,6 +7,8 @@ namespace Tbilink_BE.Application.Repositories
     public interface IPostRepository
     {
         Task<List<Post>> GetAllPosts(int? currentUserId);
+        Task<PaginatedResponse<Post>> GetAllPostsPaginated(int? currentUserId, int pageNumber = 1, int pageSize = 10);
+        Task<List<Post>> GetPostsByUserId(int userId, int? currentUserId);
         Task<Post?> GetPostById(int postId);
         Task CreatePost(CreatePostDTO createPostDTO);
         void UpdatePost(Post post);

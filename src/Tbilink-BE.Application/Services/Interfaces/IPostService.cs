@@ -7,6 +7,8 @@ namespace Tbilink_BE.Application.Services.Interfaces
     public interface IPostService
     {
         public Task<ServiceResponse<List<PostWithUserDTO>>> GetAllPosts(int? currentUserId);
+        public Task<ServiceResponse<PaginatedResponse<PostWithUserDTO>>> GetAllPostsPaginated(int? currentUserId, int pageNumber = 1, int pageSize = 10);
+        public Task<ServiceResponse<List<PostWithUserDTO>>> GetPostsByUserId(int userId, int? currentUserId);
         public Task<ServiceResponse<Post?>> GetPostById(int postId);
         public Task<ServiceResponse<string>> CreatePost(CreatePostDTO createPostDTO);
         public Task<ServiceResponse<string>> UpdatePost(int userId, PostDTO postDTO);

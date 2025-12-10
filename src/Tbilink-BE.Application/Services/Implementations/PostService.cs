@@ -48,6 +48,71 @@ namespace Tbilink_BE.Application.Services.Implementations
             return ServiceResponse<List<PostWithUserDTO>>.Success(postsWithUser, "Posts retrieved successfully.");
         }
 
+        public async Task<ServiceResponse<PaginatedResponse<PostWithUserDTO>>> GetAllPostsPaginated(int? currentUserId, int pageNumber = 1, int pageSize = 10)
+        {
+            var paginatedPosts = await _postRepository.GetAllPostsPaginated(currentUserId, pageNumber, pageSize);
+
+            if (!paginatedPosts.Data.Any())
+            {
+                return ServiceResponse<PaginatedResponse<PostWithUserDTO>>.Fail(null, "No posts found.", 404);
+            }
+
+            var postsWithUser = paginatedPosts.Data.Select(p => new PostWithUserDTO
+            {
+                Id = p.Id,
+                Content = p.Content,
+                ImageUrl = p.ImageUrl,
+                CreatedAt = p.CreatedAt,
+                LikeCount = p.LikeCount,
+                CommentCount = p.CommentCount,
+                Username = p.User.UserName,
+                FirstName = p.User.FirstName,
+                LastName = p.User.LastName,
+                Avatar = p.User.ProfilePhotoUrl,
+                UserId = p.User.Id,
+                IsLikedByCurrentUser = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value)
+            }).ToList();
+
+            var paginatedResponse = new PaginatedResponse<PostWithUserDTO>
+            {
+                Data = postsWithUser,
+                PageNumber = paginatedPosts.PageNumber,
+                PageSize = paginatedPosts.PageSize,
+                TotalCount = paginatedPosts.TotalCount,
+                TotalPages = paginatedPosts.TotalPages
+            };
+
+            return ServiceResponse<PaginatedResponse<PostWithUserDTO>>.Success(paginatedResponse, "Posts retrieved successfully.");
+        }
+
+        public async Task<ServiceResponse<List<PostWithUserDTO>>> GetPostsByUserId(int userId, int? currentUserId)
+        {
+            var posts = await _postRepository.GetPostsByUserId(userId, currentUserId);
+
+            if (!posts.Any())
+            {
+                return ServiceResponse<List<PostWithUserDTO>>.Fail(null, "No posts found for this user.", 404);
+            }
+
+            var postsWithUser = posts.Select(p => new PostWithUserDTO
+            {
+                Id = p.Id,
+                Content = p.Content,
+                ImageUrl = p.ImageUrl,
+                CreatedAt = p.CreatedAt,
+                LikeCount = p.LikeCount,
+                CommentCount = p.CommentCount,
+                Username = p.User.UserName,
+                FirstName = p.User.FirstName,
+                LastName = p.User.LastName,
+                Avatar = p.User.ProfilePhotoUrl,
+                UserId = p.User.Id,
+                IsLikedByCurrentUser = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value)
+            }).ToList();
+
+            return ServiceResponse<List<PostWithUserDTO>>.Success(postsWithUser, "User posts retrieved successfully.");
+        }
+
         public async Task<ServiceResponse<Post?>> GetPostById(int postId)
         {
             if (postId < 0)

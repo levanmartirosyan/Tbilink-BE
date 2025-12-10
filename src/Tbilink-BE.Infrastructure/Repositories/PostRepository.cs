@@ -32,6 +32,55 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<PaginatedResponse<Post>> GetAllPostsPaginated(int? currentUserId, int pageNumber = 1, int pageSize = 10)
+        {
+            var query = _db.Posts
+                .Include(p => p.User)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                .AsQueryable();
+
+            if (currentUserId.HasValue)
+            {
+                query = query.Include(p => p.Likes.Where(l => l.UserId == currentUserId.Value));
+            }
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var posts = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResponse<Post>
+            {
+                Data = posts,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages
+            };
+        }
+
+        public async Task<List<Post>> GetPostsByUserId(int userId, int? currentUserId)
+        {
+            var query = _db.Posts
+                .Include(p => p.User)
+                .Where(p => p.UserId == userId)
+                .AsQueryable();
+
+            if (currentUserId.HasValue)
+            {
+                query = query.Include(p => p.Likes.Where(l => l.UserId == currentUserId.Value));
+            }
+
+            return await query
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<Post?> GetPostById(int postId) {
             return await _db.Posts.FindAsync(postId);
         }

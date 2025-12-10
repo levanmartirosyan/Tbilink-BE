@@ -34,6 +34,38 @@ namespace Tbilink_BE.WebApi.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpGet("all/paginated")]
+        public async Task<IActionResult> GetAllPostsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var response = await _postService.GetAllPostsPaginated(userId, pageNumber, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetPostsByUserId(int userId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? currentUserId = null;
+
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var parsedUserId))
+            {
+                currentUserId = parsedUserId;
+            }
+
+            var response = await _postService.GetPostsByUserId(userId, currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
+
         [HttpGet("id")]
         public async Task<IActionResult> GetPostById(int postId)
         {

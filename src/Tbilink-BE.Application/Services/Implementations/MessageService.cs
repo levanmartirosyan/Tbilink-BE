@@ -70,7 +70,6 @@ namespace Tbilink_BE.Application.Services.Implementations
             return ServiceResponse<List<Message>>.Success(message, "Messages retrieved successfully.");
         }
 
-
         public async Task<ServiceResponse<List<ChatDTO>>> GetUserChatsAsync(int userId)
         {
             try
@@ -135,9 +134,27 @@ namespace Tbilink_BE.Application.Services.Implementations
             }
         }
 
+        public async Task<ServiceResponse<PaginatedResponse<ChatDTO>>> GetUserChatsPaginatedAsync(int userId, int pageNumber = 1, int pageSize = 10)
+        {
+            try
+            {
+                var paginatedChats = await _messageRepository.GetUserChatsPaginatedAsync(userId, pageNumber, pageSize);
+
+                if (paginatedChats.Data == null || !paginatedChats.Data.Any())
+                {
+                    return ServiceResponse<PaginatedResponse<ChatDTO>>.Success(paginatedChats, "No chats found for user.");
+                }
+
+                return ServiceResponse<PaginatedResponse<ChatDTO>>.Success(paginatedChats, "User chats retrieved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<PaginatedResponse<ChatDTO>>.Fail(null, $"Error retrieving user chats: {ex.Message}", 500);
+            }
+        }
+
         private async Task<int> GetUnreadMessageCountForDirectChat(int userId, int conversationPartnerId)
         {
-
             try
             {
                 var unreadMessages = await _messageRepository.GetMessageThreadAsync(userId, conversationPartnerId);
@@ -159,6 +176,25 @@ namespace Tbilink_BE.Application.Services.Implementations
             }
 
             return ServiceResponse<List<Message>>.Success(messages, "Messages retrieved successfully.");
+        }
+
+        public async Task<ServiceResponse<PaginatedResponse<Message>>> GetMessageThreadPaginatedAsync(int currentUserId, int recipientId, int pageNumber = 1, int pageSize = 20)
+        {
+            try
+            {
+                var paginatedMessages = await _messageRepository.GetMessageThreadPaginatedAsync(currentUserId, recipientId, pageNumber, pageSize);
+
+                if (paginatedMessages.Data == null || !paginatedMessages.Data.Any())
+                {
+                    return ServiceResponse<PaginatedResponse<Message>>.Success(paginatedMessages, "No messages found.");
+                }
+
+                return ServiceResponse<PaginatedResponse<Message>>.Success(paginatedMessages, "Messages retrieved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<PaginatedResponse<Message>>.Fail(null, $"Error retrieving messages: {ex.Message}", 500);
+            }
         }
 
         public async Task<ServiceResponse<Message>> SendMessageAsync(int senderId, CreateMessageDTO createMessageDTO)

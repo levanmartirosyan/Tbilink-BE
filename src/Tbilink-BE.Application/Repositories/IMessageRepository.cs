@@ -1,4 +1,5 @@
 ﻿using Tbilink_BE.Domain.Entities;
+using Tbilink_BE.Application.DTOs;
 
 namespace Tbilink_BE.Application.Repositories
 {
@@ -9,6 +10,8 @@ namespace Tbilink_BE.Application.Repositories
         Task<Message?> GetMessageAsync(int messageId);
         Task<List<Message>> GetMessagesForUserAsync(int userId);
         Task<List<Message>> GetMessageThreadAsync(int currentUserId, int recipientId);
+        Task<PaginatedResponse<Message>> GetMessageThreadPaginatedAsync(int currentUserId, int recipientId, int pageNumber = 1, int pageSize = 20);
+        Task<PaginatedResponse<ChatDTO>> GetUserChatsPaginatedAsync(int userId, int pageNumber = 1, int pageSize = 10);
         Task<List<Group>> GetUserChatsAsync(int userId);
         Task<List<int>> GetChatParticipantsAsync(string groupName);
         Task<Message?> GetLastMessageInGroupAsync(string groupName);
