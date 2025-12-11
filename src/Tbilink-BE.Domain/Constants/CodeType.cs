@@ -4,4 +4,5 @@ public enum CodeType
 {
     EmailVerification = 1,
     PasswordRecovery = 2,
+    EmailChange = 3,
 }

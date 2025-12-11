@@ -157,7 +157,7 @@ namespace Tbilink_BE.Services.Implementations
             {
                 FirstName = registerDTO.FirstName.Trim(),
                 LastName = registerDTO.LastName.Trim(),
-                UserName = registerDTO.UserName.Trim(),
+                UserName = registerDTO.UserName.Trim().ToLower(),
                 Email = registerDTO.Email.ToLower().Trim(),
                 Role = "User",
                 RegisterDate = DateTime.UtcNow,
@@ -226,30 +226,73 @@ namespace Tbilink_BE.Services.Implementations
 
         public async Task<ServiceResponse<string>> SendtVerificationCode(SendVerificationCodeDTO sendVerificationCodeDTO)
         {
-
             if (string.IsNullOrWhiteSpace(sendVerificationCodeDTO.Email) || !ValidationHelper.IsValidEmail(sendVerificationCodeDTO.Email))
             {
                 return ServiceResponse<string>.Fail(null, "Invalid email format.");
             }
 
-            if (sendVerificationCodeDTO.CodeType != CodeType.EmailVerification && sendVerificationCodeDTO.CodeType != CodeType.PasswordRecovery)
+            if (sendVerificationCodeDTO.CodeType != CodeType.EmailVerification &&
+                sendVerificationCodeDTO.CodeType != CodeType.PasswordRecovery &&
+                sendVerificationCodeDTO.CodeType != CodeType.EmailChange)
             {
                 return ServiceResponse<string>.Fail(null, "Invalid code type.");
             }
 
             var userExists = await _userRepository.GetUserByEmail(sendVerificationCodeDTO.Email.Trim());
 
-            if (userExists == null)
+            // Handle different scenarios based on code type
+            User targetUser = null;
+            int userId;
+
+            switch (sendVerificationCodeDTO.CodeType)
             {
-                return ServiceResponse<string>.Fail(null, "User not found.", 404);
+                case CodeType.EmailChange:
+                    // For email change, we need the current user ID
+                    if (!sendVerificationCodeDTO.CurrentUserId.HasValue)
+                    {
+                        return ServiceResponse<string>.Fail(null, "Current user ID is required for email change.", 400);
+                    }
+
+                    // Get the current user (the one changing their email)
+                    var currentUser = await _userRepository.GetUserById(sendVerificationCodeDTO.CurrentUserId.Value);
+                    if (currentUser == null)
+                    {
+                        return ServiceResponse<string>.Fail(null, "Current user not found.", 404);
+                    }
+
+                    // Check if the new email is already in use by another user
+                    if (userExists != null && userExists.Id != currentUser.Id)
+                    {
+                        return ServiceResponse<string>.Fail(null, "Email is already in use by another user.", 409);
+                    }
+
+                    targetUser = currentUser;
+                    userId = currentUser.Id;
+                    break;
+
+                case CodeType.EmailVerification:
+                case CodeType.PasswordRecovery:
+                    // For these operations, the user must exist
+                    if (userExists == null)
+                    {
+                        return ServiceResponse<string>.Fail(null, "User not found.", 404);
+                    }
+
+                    if (userExists.IsEmailVerified && sendVerificationCodeDTO.CodeType == CodeType.EmailVerification)
+                    {
+                        return ServiceResponse<string>.Fail(null, "User email is already verified.", 409);
+                    }
+
+                    targetUser = userExists;
+                    userId = userExists.Id;
+                    break;
+
+                default:
+                    return ServiceResponse<string>.Fail(null, "Invalid code type.", 400);
             }
 
-            if (userExists.IsEmailVerified && sendVerificationCodeDTO.CodeType == CodeType.EmailVerification)
-            {
-                return ServiceResponse<string>.Fail(null, "User email is already verified.", 409);
-            }
-
-            var existingRecord = await _authRepository.GetEmailVerificationRecords(userExists.Id);
+            // Remove any existing verification records for this user
+            var existingRecord = await _authRepository.GetEmailVerificationRecords(userId);
 
             if (existingRecord != null)
             {
@@ -257,7 +300,7 @@ namespace Tbilink_BE.Services.Implementations
 
                 if (!await _authRepository.SaveChangesAsync())
                 {
-                    return ServiceResponse<string>.Fail(null, "Unable to remove record from email verification table.", 500);
+                    return ServiceResponse<string>.Fail(null, "Unable to remove existing verification record.", 500);
                 }
             }
 
@@ -266,7 +309,7 @@ namespace Tbilink_BE.Services.Implementations
 
             var record = new EmailVerification
             {
-                UserId = userExists.Id,
+                UserId = userId,
                 CodeHash = codeHash,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(5),
                 CodeType = sendVerificationCodeDTO.CodeType,
@@ -277,16 +320,24 @@ namespace Tbilink_BE.Services.Implementations
 
             if (!await _authRepository.SaveChangesAsync())
             {
-                return ServiceResponse<string>.Fail(null, "Unable to add record to email verification table.", 500);
+                return ServiceResponse<string>.Fail(null, "Unable to add verification record.", 500);
             }
 
             var templatePath = Path.Combine(_env.WebRootPath, "Resources", "Templates", "EmailVerification.html");
             var htmlTemplate = await File.ReadAllTextAsync(templatePath);
             var body = htmlTemplate.Replace("{{CODE}}", code);
 
-            if (string.IsNullOrWhiteSpace(userExists.Email)) throw new InvalidOperationException("User email is null. Cannot send verification code.");
+            // For email change, send to the new email; for others, send to the user's current email
+            var emailToSend = sendVerificationCodeDTO.CodeType == CodeType.EmailChange
+                ? sendVerificationCodeDTO.Email.Trim()
+                : targetUser.Email;
 
-            var emailResult = await _emailService.SendEmail(userExists.Email, "Email verification.", body);
+            if (string.IsNullOrWhiteSpace(emailToSend))
+            {
+                return ServiceResponse<string>.Fail(null, "Invalid email address for sending verification code.", 500);
+            }
+
+            var emailResult = await _emailService.SendEmail(emailToSend, "Email verification.", body);
 
             if (!emailResult.IsSuccess)
             {
@@ -296,77 +347,90 @@ namespace Tbilink_BE.Services.Implementations
             return ServiceResponse<string>.Success(null, "Verification code sent.");
         }
 
-        public async Task<ServiceResponse<EmailVerificationResultDTO>> VerifyEmail(string email, string code)
+        public async Task<ServiceResponse<EmailVerificationResultDTO>> VerifyEmail(string email, string code, int? currentUserId = null)
         {
             if (string.IsNullOrWhiteSpace(code))
+                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Invalid code format.", 400);
+
+            if (string.IsNullOrWhiteSpace(email) || !ValidationHelper.IsValidEmail(email))
+                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Invalid email format.", 400);
+
+            var normalizedEmail = email.Trim();
+
+            var userByEmail = await _userRepository.GetUserByEmail(normalizedEmail);
+
+            EmailVerification record;
+            int recordUserId;
+
+            if (userByEmail != null)
             {
-                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Invalid code format.");
+                recordUserId = userByEmail.Id;
+                record = await _authRepository.GetEmailVerificationRecords(recordUserId);
+
+                if (record == null)
+                    return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Email verification record not found.", 404);
             }
-
-            if (!ValidationHelper.IsValidEmail(email))
+            else
             {
-                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Invalid email format.");
-            }
+                if (!currentUserId.HasValue)
+                    return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Current user id is required for email change verification.", 401);
 
-            var userExist = await _userRepository.GetUserByEmail(email.Trim());
+                recordUserId = currentUserId.Value;
+                record = await _authRepository.GetEmailVerificationRecords(recordUserId);
 
-            if (userExist == null)
-            {
-                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "User not found.", 404);
-            }
+                if (record == null)
+                    return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Email verification record not found.", 404);
 
-            var record = await _authRepository.GetEmailVerificationRecords(userExist.Id);
-
-            if (record == null)
-            {
-                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Email verification record not found.", 404);
+                if (record.CodeType != CodeType.EmailChange)
+                    return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "No email-change verification found for this user.", 400);
             }
 
             if (record.IsVerified)
-            {
                 return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Code already used.", 409);
-            }
 
             if (record.ExpiresAt < DateTime.UtcNow)
-            {
                 return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Code expired.", 410);
-            }
 
             if (record.CodeHash != OtpHelper.HashCode(code))
-            {
-                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Invalid code.");
-            }
+                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Invalid code.", 400);
 
             record.IsVerified = true;
 
             if (record.CodeType == CodeType.EmailVerification)
             {
-                if (record.User ==null )
-                {
+                var targetUser = userByEmail ?? record.User;
+                if (targetUser == null)
                     return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "User not found.", 404);
-                }
 
-                var user = await _userRepository.GetUserByEmail(record.User.Email);
-
+                var user = await _userRepository.GetUserByEmail(targetUser.Email);
                 if (user == null)
-                {
                     return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "User not found.", 404);
-                }
 
                 user.IsEmailVerified = true;
-
                 _userRepository.UpdateUser(user);
+            }
+            else if (record.CodeType == CodeType.EmailChange)
+            {
+                var currentUser = await _userRepository.GetUserById(recordUserId);
+                if (currentUser == null)
+                    return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Current user not found.", 404);
+
+                var other = await _userRepository.GetUserByEmail(normalizedEmail);
+                if (other != null && other.Id != currentUser.Id)
+                    return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Email is already in use.", 409);
+
+                currentUser.Email = normalizedEmail;
+                _userRepository.UpdateUser(currentUser);
             }
 
             _authRepository.UpdateEmailVerificationRecord(record);
 
             if (!await _authRepository.SaveChangesAsync())
-            {
                 return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "Failed to update email verification record.", 500);
-            }
 
             return ServiceResponse<EmailVerificationResultDTO>.Success(null, "Email verified successfully.");
         }
+
 
         public async Task<ServiceResponse<CreateNewPasswordDTO>> CreateNewPassword(CreateNewPasswordDTO createNewPasswordDTO)
         {

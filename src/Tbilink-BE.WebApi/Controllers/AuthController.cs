@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Tbilink_BE.Application.DTOs;
 using Tbilink_BE.Application.Services.Interfaces;
 using Tbilink_BE.Domain.Constants;
@@ -46,7 +47,15 @@ namespace Tbilink_BE.Controllers
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDTO request)
         {
-            var response = await _authService.VerifyEmail(request.Email, request.Code);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            int? userId = null;
+            if (int.TryParse(userIdClaim, out var parsed))
+            {
+                userId = parsed;
+            }
+
+            var response = await _authService.VerifyEmail(request.Email, request.Code, userId);
 
             return StatusCode(response.StatusCode, response);
         }

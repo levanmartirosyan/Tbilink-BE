@@ -168,12 +168,6 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetPostCommentCountAsync(int postId)
-        {
-            return await _db.Comments
-                .CountAsync(c => c.PostId == postId);
-        }
-
         public async Task AddCommentAsync(Comment comment)
         {
             await _db.Comments.AddAsync(comment);
@@ -204,17 +198,6 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetCommentLikeCountAsync(int commentId)
-        {
-            return await _db.CommentLikes
-                .CountAsync(cl => cl.CommentId == commentId);
-        }
-
-        public async Task<bool> HasUserLikedCommentAsync(int commentId, int userId)
-        {
-            return await _db.CommentLikes
-                .AnyAsync(cl => cl.CommentId == commentId && cl.UserId == userId);
-        }
 
         public async Task AddCommentLikeAsync(CommentLike commentLike)
         {

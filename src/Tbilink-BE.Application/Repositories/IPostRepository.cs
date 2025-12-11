@@ -16,22 +16,17 @@ namespace Tbilink_BE.Application.Repositories
 
         Task<PostLike?> GetPostLikeAsync(int postId, int userId);
         Task<List<PostLike>> GetPostLikesAsync(int postId);
-        Task<int> GetPostLikeCountAsync(int postId);
-        Task<bool> HasUserLikedPostAsync(int postId, int userId);
         Task AddPostLikeAsync(PostLike postLike);
         Task RemovePostLikeAsync(PostLike postLike);
 
         Task<Comment?> GetCommentByIdAsync(int commentId);
         Task<List<Comment>> GetPostCommentsAsync(int postId, int? currentUserId);
-        Task<int> GetPostCommentCountAsync(int postId);
         Task AddCommentAsync(Comment comment);
         void UpdateComment(Comment comment);
         void DeleteComment(Comment comment);
 
         Task<CommentLike?> GetCommentLikeAsync(int commentId, int userId);
         Task<List<CommentLike>> GetCommentLikesAsync(int commentId);
-        Task<int> GetCommentLikeCountAsync(int commentId);
-        Task<bool> HasUserLikedCommentAsync(int commentId, int userId);
         Task AddCommentLikeAsync(CommentLike commentLike);
         Task RemoveCommentLikeAsync(CommentLike commentLike);
 

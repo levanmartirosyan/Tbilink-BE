@@ -6,6 +6,7 @@ namespace Tbilink_BE.Application.Repositories
     {
         Task<User?> GetUserByEmail(string email);
         Task<User?> GetUserById(int userId);
+        Task<User?> GetUserByUsername(string username);
         Task CreateUser(User user);
         void UpdateUser(User user);
         void RemoveUser(User user);

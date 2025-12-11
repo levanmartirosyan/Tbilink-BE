@@ -191,46 +191,7 @@ namespace Tbilink_BE.WebApi.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpGet("comments/{commentId}/liked")]
-        public async Task<IActionResult> HasUserLikedComment(int commentId)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-            {
-                return BadRequest("Invalid user ID in token");
-            }
-
-            var response = await _postService.HasUserLikedCommentAsync(commentId, userId);
-            return StatusCode(response.StatusCode, response);
-        }
-
-        [HttpGet("comments/{commentId}/likes/count")]
-        public async Task<IActionResult> GetCommentLikeCount(int commentId)
-        {
-            var response = await _postService.GetCommentLikeCountAsync(commentId);
-            return StatusCode(response.StatusCode, response);
-        }
-
         #endregion
 
-        //[HttpGet("{postId}/liked")]
-        //public async Task<IActionResult> HasUserLikedPost(int postId)
-        //{
-        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-        //    {
-        //        return BadRequest("Invalid user ID in token");
-        //    }
-
-        //    var response = await _postService.HasUserLikedPostAsync(postId, userId);
-        //    return StatusCode(response.StatusCode, response);
-        //}
-
-        //[HttpGet("{postId}/likes/count")]
-        //public async Task<IActionResult> GetPostLikeCount(int postId)
-        //{
-        //    var response = await _postService.GetPostLikeCountAsync(postId);
-        //    return StatusCode(response.StatusCode, response);
-        //}
     }
 }

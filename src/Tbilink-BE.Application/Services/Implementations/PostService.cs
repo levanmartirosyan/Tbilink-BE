@@ -292,32 +292,6 @@ namespace Tbilink_BE.Application.Services.Implementations
             }
         }
 
-        public async Task<ServiceResponse<bool>> HasUserLikedPostAsync(int postId, int userId)
-        {
-            try
-            {
-                var hasLiked = await _postRepository.HasUserLikedPostAsync(postId, userId);
-                return ServiceResponse<bool>.Success(hasLiked, "Like status retrieved successfully.");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<bool>.Fail(false, "An error occurred while checking like status.", 500);
-            }
-        }
-
-        public async Task<ServiceResponse<int>> GetPostLikeCountAsync(int postId)
-        {
-            try
-            {
-                var count = await _postRepository.GetPostLikeCountAsync(postId);
-                return ServiceResponse<int>.Success(count, "Like count retrieved successfully.");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<int>.Fail(0, "An error occurred while getting like count.", 500);
-            }
-        }
-
         #endregion
 
         #region Comment Methods
@@ -567,31 +541,6 @@ namespace Tbilink_BE.Application.Services.Implementations
             }
         }
 
-        public async Task<ServiceResponse<bool>> HasUserLikedCommentAsync(int commentId, int userId)
-        {
-            try
-            {
-                var hasLiked = await _postRepository.HasUserLikedCommentAsync(commentId, userId);
-                return ServiceResponse<bool>.Success(hasLiked, "Comment like status retrieved successfully.");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<bool>.Fail(false, "An error occurred while checking comment like status.", 500);
-            }
-        }
-
-        public async Task<ServiceResponse<int>> GetCommentLikeCountAsync(int commentId)
-        {
-            try
-            {
-                var count = await _postRepository.GetCommentLikeCountAsync(commentId);
-                return ServiceResponse<int>.Success(count, "Comment like count retrieved successfully.");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<int>.Fail(0, "An error occurred while getting comment like count.", 500);
-            }
-        }
         #endregion
     }
 }

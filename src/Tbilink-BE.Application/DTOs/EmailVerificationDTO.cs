@@ -7,6 +7,7 @@ namespace Tbilink_BE.Application.DTOs
     {
         public required string Email { get; set; }
         public CodeType CodeType { get; set; }
+        public int? CurrentUserId { get; set; }
     }
 
     public class VerifyEmailDTO

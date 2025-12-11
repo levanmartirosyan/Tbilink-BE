@@ -24,6 +24,11 @@ namespace Tbilink_BE.Infrastructure.Repositories
             return await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         }
 
+        public async Task<User?> GetUserByUsername(string username)
+        {
+            return await _db.Users.FirstOrDefaultAsync(u => u.UserName == username);
+        }
+
         public async Task CreateUser(User user)
         {
             await _db.Users.AddAsync(user);
