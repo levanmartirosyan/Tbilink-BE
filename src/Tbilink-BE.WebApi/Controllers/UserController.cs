@@ -60,5 +60,80 @@ namespace Tbilink_BE.WebApi.Controllers
             var response = await _userService.UpdateUserAsync(currentUserId, targetUserId, updateUserDto);
             return StatusCode(response.StatusCode, response);
         }
+
+        #region Follow Endpoints
+
+        [HttpPost("follow/{userId}")]
+        public async Task<IActionResult> ToggleFollowUser(int userId)
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            var response = await _userService.ToggleFollowUserAsync(currentUserId, userId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("{userId}/followers")]
+        public async Task<IActionResult> GetUserFollowers(int userId)
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? currentUserId = null;
+
+            if (!string.IsNullOrEmpty(currentUserIdClaim) && int.TryParse(currentUserIdClaim, out var parsedUserId))
+            {
+                currentUserId = parsedUserId;
+            }
+
+            var response = await _userService.GetFollowersAsync(userId, currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("{userId}/following")]
+        public async Task<IActionResult> GetUserFollowing(int userId)
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? currentUserId = null;
+
+            if (!string.IsNullOrEmpty(currentUserIdClaim) && int.TryParse(currentUserIdClaim, out var parsedUserId))
+            {
+                currentUserId = parsedUserId;
+            }
+
+            var response = await _userService.GetFollowingAsync(userId, currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("mutual-follows")]
+        public async Task<IActionResult> GetMutualFollows()
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            var response = await _userService.GetMutualFollowsAsync(currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("{userId}/follow-stats")]
+        public async Task<IActionResult> GetFollowStats(int userId)
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? currentUserId = null;
+
+            if (!string.IsNullOrEmpty(currentUserIdClaim) && int.TryParse(currentUserIdClaim, out var parsedUserId))
+            {
+                currentUserId = parsedUserId;
+            }
+
+            var response = await _userService.GetFollowStatsAsync(userId, currentUserId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        #endregion
     }
 }

@@ -30,6 +30,9 @@ namespace Tbilink_BE.Application.Repositories
         Task AddCommentLikeAsync(CommentLike commentLike);
         Task RemoveCommentLikeAsync(CommentLike commentLike);
 
+        Task<List<Post>> SearchPostsAsync(string? keyword, int page, int pageSize, int? currentUserId = null);
+        Task<int> GetSearchPostsCountAsync(string? keyword);
+
         Task<bool> SaveChangesAsync();
     }
 }

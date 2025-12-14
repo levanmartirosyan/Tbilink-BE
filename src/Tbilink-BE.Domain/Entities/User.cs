@@ -35,6 +35,10 @@ namespace Tbilink_BE.Models
         public List<PostLike> PostLikes { get; set; } = new List<PostLike>();
         public List<CommentLike> CommentLikes { get; set; } = new List<CommentLike>();
 
+        // Follow relationships - Add these
+        public List<UserFollow> Following { get; set; } = new List<UserFollow>();
+        public List<UserFollow> Followers { get; set; } = new List<UserFollow>();
+
         // Stats
         public int PostCount { get; set; }
         public int FollowersCount { get; set; }

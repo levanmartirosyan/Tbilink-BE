@@ -16,6 +16,7 @@ namespace Tbilink_BE.Data
         public DbSet<Connection> Connections { get; set; }
         public DbSet<PostLike> PostLikes { get; set; }
         public DbSet<CommentLike> CommentLikes { get; set; }
+        public DbSet<UserFollow> UserFollows { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
@@ -93,6 +94,27 @@ namespace Tbilink_BE.Data
                       .WithMany(u => u.CommentLikes)
                       .HasForeignKey(cl => cl.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserFollow>(entity =>
+            {
+                entity.HasKey(uf => uf.Id);
+
+                // Composite unique constraint to prevent duplicate follows
+                entity.HasIndex(uf => new { uf.FollowerId, uf.FollowedId })
+                      .IsUnique();
+
+                // Follower relationship
+                entity.HasOne(uf => uf.Follower)
+                      .WithMany(u => u.Following)
+                      .HasForeignKey(uf => uf.FollowerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Followed relationship
+                entity.HasOne(uf => uf.Followed)
+                      .WithMany(u => u.Followers)
+                      .HasForeignKey(uf => uf.FollowedId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
 

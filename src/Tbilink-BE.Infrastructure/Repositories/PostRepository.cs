@@ -209,6 +209,45 @@ namespace Tbilink_BE.Infrastructure.Repositories
             _db.CommentLikes.Remove(commentLike);
         }
 
+
+        public async Task<List<Post>> SearchPostsAsync(string? keyword, int page, int pageSize, int? currentUserId = null)
+        {
+            var query = _db.Posts
+                .Include(p => p.User)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var searchTerm = keyword.ToLower().Trim();
+                query = query.Where(p => p.Content.ToLower().Contains(searchTerm));
+            }
+
+            if (currentUserId.HasValue)
+            {
+                query = query.Include(p => p.Likes.Where(l => l.UserId == currentUserId.Value));
+            }
+
+            return await query
+                .OrderByDescending(p => p.CreatedAt) // Latest posts first
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetSearchPostsCountAsync(string? keyword)
+        {
+            var query = _db.Posts.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var searchTerm = keyword.ToLower().Trim();
+                query = query.Where(p => p.Content.ToLower().Contains(searchTerm));
+            }
+
+            return await query.CountAsync();
+        }
+
+
         public async Task<bool> SaveChangesAsync()
         {
             return await _db.SaveChangesAsync() > 0;
