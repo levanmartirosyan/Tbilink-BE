@@ -11,6 +11,9 @@ namespace Tbilink_BE.Application.Services.Interfaces
         public Task<ServiceResponse<User>> GetUserInfoByUsername(string username);
         public Task<ServiceResponse<string>> UpdateUserAsync(int userId, UpdateUserDTO updateUserDto); 
         public Task<ServiceResponse<string>> UpdateUserAsync(int currentUserId, int targetUserId, UpdateUserDTO updateUserDto);
+        public Task<ServiceResponse<string>> RemoveUser(int currentUserId, int userId);
+
+        Task<ServiceResponse<string>> ChangePasswordAsync(int userId, ChangePasswordDTO dto);
 
         public Task<ServiceResponse<string>> ToggleFollowUserAsync(int currentUserId, int targetUserId);
         public Task<ServiceResponse<List<UserFollowDTO>>> GetFollowersAsync(int userId, int? currentUserId = null);

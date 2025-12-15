@@ -1,10 +1,12 @@
 ﻿using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
+using Tbilink_BE.Application.Common;
 using Tbilink_BE.Application.DTOs;
 using Tbilink_BE.Application.Repositories;
 using Tbilink_BE.Application.Services.Interfaces;
 using Tbilink_BE.Domain.Entities;
 using Tbilink_BE.Models;
+using Tbilink_BE.Services.Helpers;
 
 namespace Tbilink_BE.Application.Services.Implementations
 {
@@ -19,6 +21,92 @@ namespace Tbilink_BE.Application.Services.Implementations
             _postRepository = postRepository;
         }
 
+        #region User Methods
+        public async Task<ServiceResponse<string>> RemoveUser(int currentUserId, int userId)
+        {
+            try
+            {
+                if (userId < 0)
+                {
+                    return ServiceResponse<string>.Fail(null, "Invalid user ID.", 400);
+                }
+
+                var userToDelete = await _userRepository.GetUserById(userId);
+                if (userToDelete == null)
+                {
+                    return ServiceResponse<string>.Fail(null, "User not found.", 404);
+                }
+
+                var currentUser = await _userRepository.GetUserById(currentUserId);
+                if (currentUser == null)
+                {
+                    return ServiceResponse<string>.Fail(null, "Current user not found.", 401);
+                }
+
+                if (currentUser.Id != userId && !IsAdminOrOwner(currentUser))
+                {
+                    return ServiceResponse<string>.Fail(null, "You are not allowed to delete this user.", 403);
+                }
+
+                _userRepository.RemoveUser(userToDelete);
+
+                if (!await _userRepository.SaveChangesAsync())
+                {
+                    return ServiceResponse<string>.Fail(null, "Failed to delete user.", 500);
+                }
+
+                return ServiceResponse<string>.Success(null, "User deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.Fail(null, "An error occurred while deleting the user.", 500);
+            }
+        }
+
+        public async Task<ServiceResponse<string>> ChangePasswordAsync(int userId, ChangePasswordDTO dto)
+        {
+            if (dto == null)
+                return ServiceResponse<string>.Fail(null, "Invalid request.", 400);
+
+            if (string.IsNullOrWhiteSpace(dto.OldPassword) ||
+                string.IsNullOrWhiteSpace(dto.NewPassword) ||
+                string.IsNullOrWhiteSpace(dto.RepeatNewPassword))
+            {
+                return ServiceResponse<string>.Fail(null, "All password fields are required.", 400);
+            }
+
+            if (!ValidationHelper.IsValidPassword(dto.NewPassword))
+            {
+                return ServiceResponse<string>.Fail(null, "Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character.", 400);
+            }
+
+            if (dto.NewPassword != dto.RepeatNewPassword)
+            {
+                return ServiceResponse<string>.Fail(null, "New passwords do not match.", 400);
+            }
+
+            var user = await _userRepository.GetUserById(userId);
+            if (user == null)
+                return ServiceResponse<string>.Fail(null, "User not found.", 404);
+
+            if (!OtpHelper.VerifyPasswordHash(dto.OldPassword, user.PasswordHash, user.PasswordSalt))
+            {
+                return ServiceResponse<string>.Fail(null, "Old password is incorrect.", 400);
+            }
+
+            OtpHelper.CreatePasswordHash(dto.NewPassword, out byte[] newHash, out byte[] newSalt);
+            user.PasswordHash = newHash;
+            user.PasswordSalt = newSalt;
+
+            _userRepository.UpdateUser(user);
+
+            if (!await _userRepository.SaveChangesAsync())
+                return ServiceResponse<string>.Fail(null, "Failed to change password.", 500);
+
+            return ServiceResponse<string>.Success(null, "Password changed successfully.");
+        }
+
+        #endregion
 
         #region User Info Methods
         public async Task<ServiceResponse<User>> GetUserInfoByEmail(ClaimsPrincipal userPrincipal)

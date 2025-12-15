@@ -18,7 +18,8 @@ namespace Tbilink_BE.WebApi.Controllers
             _userService = userService;
         }
 
-        
+        #region User Endpoint
+
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
@@ -60,6 +61,34 @@ namespace Tbilink_BE.WebApi.Controllers
             var response = await _userService.UpdateUserAsync(currentUserId, targetUserId, updateUserDto);
             return StatusCode(response.StatusCode, response);
         }
+
+        [HttpDelete("remove/{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                return BadRequest("Invalid user ID in token.");
+            }
+
+            var response = await _userService.RemoveUser(currentUserId, userId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            var response = await _userService.ChangePasswordAsync(userId, dto);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        #endregion
 
         #region Follow Endpoints
 
