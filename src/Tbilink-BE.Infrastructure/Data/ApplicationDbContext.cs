@@ -100,7 +100,7 @@ namespace Tbilink_BE.Data
             {
                 entity.HasKey(uf => uf.Id);
 
-                // Composite unique constraint to prevent duplicate follows
+                // Prevent duplicate follows
                 entity.HasIndex(uf => new { uf.FollowerId, uf.FollowedId })
                       .IsUnique();
 
@@ -108,13 +108,13 @@ namespace Tbilink_BE.Data
                 entity.HasOne(uf => uf.Follower)
                       .WithMany(u => u.Following)
                       .HasForeignKey(uf => uf.FollowerId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 // Followed relationship
                 entity.HasOne(uf => uf.Followed)
                       .WithMany(u => u.Followers)
                       .HasForeignKey(uf => uf.FollowedId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
 
