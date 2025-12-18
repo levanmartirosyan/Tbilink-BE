@@ -130,52 +130,92 @@ namespace Tbilink_BE.Application.Services.Implementations
             return ServiceResponse<Post?>.Success(post, "Post retrieved successfully.");
         }
 
-        public async Task<ServiceResponse<string>> CreatePost(CreatePostDTO createPostDTO)
+        public async Task<ServiceResponse<PostResponseDTO>> CreatePost(
+            CreatePostDTO createPostDTO,
+            int currentUserId
+        )
         {
             if (string.IsNullOrWhiteSpace(createPostDTO.Content))
             {
-                return ServiceResponse<string>.Fail(null, "Post content cannot be empty.", 400);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "Post content cannot be empty.", 400);
             }
 
-            await _postRepository.CreatePost(createPostDTO);
+            var post = new Post
+            {
+                UserId = currentUserId,
+                Content = createPostDTO.Content,
+                ImageUrl = createPostDTO.ImageUrl
+            };
+
+            await _postRepository.CreatePost(post);
 
             if (!await _postRepository.SaveChangesAsync())
             {
-                ServiceResponse<string>.Fail(null, "Failed to create post.", 500);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "Failed to create post.", 500);
             }
 
-            return ServiceResponse<string>.Success(null, "Post created successfully.", 201);
+            var newPost = await _postRepository.GetPostWithDetails(post.Id);
+
+            var response = new PostResponseDTO
+            {
+                Id = newPost.Id,
+                Content = newPost.Content,
+                ImageUrl = newPost.ImageUrl,
+                CreatedAt = newPost.CreatedAt,
+                LikeCount = newPost.LikeCount,
+                CommentCount = newPost.CommentCount,
+
+                UserId = newPost.User.Id,
+                Username = newPost.User.UserName,
+                FirstName = newPost.User.FirstName,
+                LastName = newPost.User.LastName,
+                Avatar = newPost.User.ProfilePhotoUrl,
+
+                IsLikedByCurrentUser = newPost.Likes
+                    .Any(l => l.UserId == currentUserId)
+            };
+
+            return ServiceResponse<PostResponseDTO>.Success(
+                response, "Post created successfully.", 201);
         }
 
-        public async Task<ServiceResponse<string>> UpdatePost(int userId, PostDTO postDTO)
+
+        public async Task<ServiceResponse<PostResponseDTO>> UpdatePost(int userId, PostDTO postDTO)
         {
             if (postDTO == null)
             {
-                return ServiceResponse<string>.Fail(null, "Post content cannot be empty.", 400);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "Post content cannot be empty.", 400);
             }
 
             var post = await _postRepository.GetPostById(postDTO.Id);
 
             if (post == null)
             {
-                return ServiceResponse<string>.Fail(null, "Post not found.", 404);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "Post not found.", 404);
             }
 
             var currentUserResponse = await _userService.GetUserInfoById(userId);
 
             if (currentUserResponse.Data == null)
             {
-                return ServiceResponse<string>.Fail(null, "Current user not found.", 401);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "Current user not found.", 401);
             }
 
             var currentUser = currentUserResponse.Data;
 
             var isOwner = currentUser.Id == post.UserId;
-            var isAdminOrOwner = currentUser.Role == "Admin" || currentUser.Role == "Owner";
+            var isAdminOrOwner =
+                currentUser.Role == "Admin" || currentUser.Role == "Owner";
 
             if (!isOwner && !isAdminOrOwner)
             {
-                return ServiceResponse<string>.Fail(null, "You are not allowed to edit this post.", 403);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "You are not allowed to edit this post.", 403);
             }
 
             if (!string.IsNullOrWhiteSpace(postDTO.Content))
@@ -192,13 +232,38 @@ namespace Tbilink_BE.Application.Services.Implementations
 
             if (!await _postRepository.SaveChangesAsync())
             {
-                return ServiceResponse<string>.Fail(null, "Failed to update post.", 500);
+                return ServiceResponse<PostResponseDTO>.Fail(
+                    null, "Failed to update post.", 500);
             }
 
-            return ServiceResponse<string>.Success(null, "Post updated successfully.");
+            var updatedPost = await _postRepository.GetPostWithDetails(post.Id);
+
+            var response = new PostResponseDTO
+            {
+                Id = updatedPost.Id,
+                Content = updatedPost.Content,
+                ImageUrl = updatedPost.ImageUrl,
+                CreatedAt = updatedPost.CreatedAt,
+
+                LikeCount = updatedPost.LikeCount,
+                CommentCount = updatedPost.CommentCount,
+
+                UserId = updatedPost.User.Id,
+                Username = updatedPost.User.UserName,
+                FirstName = updatedPost.User.FirstName,
+                LastName = updatedPost.User.LastName,
+                Avatar = updatedPost.User.ProfilePhotoUrl,
+
+                IsLikedByCurrentUser = updatedPost.Likes
+                    .Any(l => l.UserId == userId)
+            };
+
+            return ServiceResponse<PostResponseDTO>.Success(
+                response, "Post updated successfully.");
         }
 
-        public async Task<ServiceResponse<string>> DeletePost(int postId, ClaimsPrincipal currentUserPrincipal)
+
+        public async Task<ServiceResponse<string>> DeletePost(int postId, int userId)
         {
             if (postId < 0)
             {
@@ -212,7 +277,7 @@ namespace Tbilink_BE.Application.Services.Implementations
                 return ServiceResponse<string>.Fail(null, "Post not found.", 404);
             }
 
-            var currentUserResponse = await _userService.GetUserInfoByEmail(currentUserPrincipal);
+            var currentUserResponse = await _userService.GetUserInfoById(userId);
 
             if (currentUserResponse.Data == null)
             {
@@ -337,19 +402,22 @@ namespace Tbilink_BE.Application.Services.Implementations
             {
                 if (string.IsNullOrWhiteSpace(createCommentDto.Content))
                 {
-                    return ServiceResponse<CommentDTO>.Fail(null, "Comment content cannot be empty.", 400);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "Comment content cannot be empty.", 400);
                 }
 
                 var post = await _postRepository.GetPostById(createCommentDto.PostId);
                 if (post == null)
                 {
-                    return ServiceResponse<CommentDTO>.Fail(null, "Post not found.", 404);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "Post not found.", 404);
                 }
 
-                var user = await _userService.GetUserInfoById(userId);
-                if (user.Data == null)
+                var userResponse = await _userService.GetUserInfoById(userId);
+                if (userResponse.Data == null)
                 {
-                    return ServiceResponse<CommentDTO>.Fail(null, "User not found.", 404);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "User not found.", 404);
                 }
 
                 var comment = new Comment
@@ -365,35 +433,38 @@ namespace Tbilink_BE.Application.Services.Implementations
                 post.CommentCount += 1;
                 _postRepository.UpdatePost(post);
 
-                if (await _postRepository.SaveChangesAsync())
+                if (!await _postRepository.SaveChangesAsync())
                 {
-                    var commentDto = new CommentDTO
-                    {
-                        Id = comment.Id,
-                        PostId = comment.PostId,
-                        UserId = comment.UserId,
-                        UserName = user.Data.UserName,
-                        FirstName = user.Data.FirstName,
-                        LastName = user.Data.LastName,
-                        Avatar = user.Data.ProfilePhotoUrl,
-                        Content = comment.Content,
-                        CreatedAt = comment.CreatedAt
-                    };
-
-                    // Send notification to post owner (if not commenting on own post)
-                    // if (post.UserId != userId)
-                    // {
-                    //     await _notificationService.SendCommentNotificationAsync(post.UserId, userId, post.Id, comment.Content);
-                    // }
-
-                    return ServiceResponse<CommentDTO>.Success(commentDto, "Comment created successfully.", 201);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "Failed to create comment.", 500);
                 }
 
-                return ServiceResponse<CommentDTO>.Fail(null, "Failed to create comment.", 500);
+                var createdComment =
+                    await _postRepository.GetCommentWithDetailsAsync(comment.Id);
+
+                var commentDto = new CommentDTO
+                {
+                    Id = createdComment.Id,
+                    PostId = createdComment.PostId,
+                    UserId = createdComment.UserId,
+                    UserName = createdComment.User.UserName,
+                    FirstName = createdComment.User.FirstName,
+                    LastName = createdComment.User.LastName,
+                    Avatar = createdComment.User.ProfilePhotoUrl,
+                    Content = createdComment.Content,
+                    CreatedAt = createdComment.CreatedAt,
+                    LikeCount = createdComment.LikeCount,
+                    IsLikedByCurrentUser =
+                        createdComment.Likes.Any(l => l.UserId == userId)
+                };
+
+                return ServiceResponse<CommentDTO>.Success(
+                    commentDto, "Comment created successfully.", 201);
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiceResponse<CommentDTO>.Fail(null, "An error occurred while creating comment.", 500);
+                return ServiceResponse<CommentDTO>.Fail(
+                    null, "An error occurred while creating comment.", 500);
             }
         }
 

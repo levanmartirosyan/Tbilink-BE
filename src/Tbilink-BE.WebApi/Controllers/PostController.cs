@@ -76,22 +76,39 @@ namespace Tbilink_BE.WebApi.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDTO createPostDTO)
         {
-            var response = await _postService.CreatePost(createPostDTO);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            var response = await _postService.CreatePost(createPostDTO, userId);
             return StatusCode(response.StatusCode, response);
         }
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdatePost([FromBody] PostDTO postDTO)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var response = await _postService.UpdatePost(int.Parse(userIdClaim), postDTO);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            var response = await _postService.UpdatePost(userId, postDTO);
             return StatusCode(response.StatusCode, response);
         }
 
         [HttpDelete("delete")]
         public async Task<IActionResult> DeletePost(int postId)
         {
-            var response = await _postService.DeletePost(postId, User);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user ID in token");
+            }
+
+            var response = await _postService.DeletePost(postId, userId);
             return StatusCode(response.StatusCode, response);
         }
 

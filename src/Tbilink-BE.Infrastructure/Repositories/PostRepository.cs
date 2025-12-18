@@ -85,15 +85,18 @@ namespace Tbilink_BE.Infrastructure.Repositories
             return await _db.Posts.FindAsync(postId);
         }
 
-        public async Task CreatePost(CreatePostDTO createPostDTO)
+        public async Task<Post?> GetPostWithDetails(int postId)
         {
-            _db.Posts.Add(new Post
-            {
-                UserId = createPostDTO.UserId,
-                Content = createPostDTO.Content,
-                ImageUrl = createPostDTO.ImageUrl,
-                CreatedAt = DateTime.UtcNow
-            });
+            return await _db.Posts
+                .Include(p => p.User)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                .FirstOrDefaultAsync(p => p.Id == postId);
+        }
+
+        public async Task CreatePost(Post post)
+        {
+            _db.Posts.Add(post);
         }
 
         public void UpdatePost(Post post)
@@ -168,6 +171,14 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Comment?> GetCommentWithDetailsAsync(int commentId)
+        {
+            return await _db.Comments
+                .Include(c => c.User)
+                .Include(c => c.Likes)
+                .FirstOrDefaultAsync(c => c.Id == commentId);
+        }
+
         public async Task AddCommentAsync(Comment comment)
         {
             await _db.Comments.AddAsync(comment);
@@ -228,7 +239,7 @@ namespace Tbilink_BE.Infrastructure.Repositories
             }
 
             return await query
-                .OrderByDescending(p => p.CreatedAt) // Latest posts first
+                .OrderByDescending(p => p.CreatedAt) 
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

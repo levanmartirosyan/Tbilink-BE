@@ -109,14 +109,12 @@ namespace Tbilink_BE.Application.Services.Implementations
         #endregion
 
         #region User Info Methods
-        public async Task<ServiceResponse<User>> GetUserInfoByEmail(ClaimsPrincipal userPrincipal)
+        public async Task<ServiceResponse<User>> GetUserInfoByEmail(string email)
         {
-            var email = userPrincipal.FindFirst(JwtRegisteredClaimNames.Email)?.Value
-                        ?? userPrincipal.FindFirst(ClaimTypes.Email)?.Value;
 
             if (string.IsNullOrEmpty(email))
             {
-                return ServiceResponse<User>.Fail(null, "Missing email claim in token.", 401);
+                return ServiceResponse<User>.Fail(null, "Missing email.", 401);
             }
                 
             var user = await _userRepository.GetUserByEmail(email);

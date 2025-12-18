@@ -23,7 +23,13 @@ namespace Tbilink_BE.WebApi.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var response = await _userService.GetUserInfoByEmail(User);
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                return BadRequest("Invalid user ID in token.");
+            }
+
+            var response = await _userService.GetUserInfoById(currentUserId);
 
             return StatusCode(response.StatusCode, response);
         }

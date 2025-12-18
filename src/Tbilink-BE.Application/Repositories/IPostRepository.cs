@@ -10,7 +10,8 @@ namespace Tbilink_BE.Application.Repositories
         Task<PaginatedResponse<Post>> GetAllPostsPaginated(int? currentUserId, int pageNumber = 1, int pageSize = 10);
         Task<List<Post>> GetPostsByUserId(int userId, int? currentUserId);
         Task<Post?> GetPostById(int postId);
-        Task CreatePost(CreatePostDTO createPostDTO);
+        Task<Post?> GetPostWithDetails(int postId);
+        Task CreatePost(Post post);
         void UpdatePost(Post post);
         void DeletePost(Post post);
 
@@ -27,6 +28,7 @@ namespace Tbilink_BE.Application.Repositories
 
         Task<CommentLike?> GetCommentLikeAsync(int commentId, int userId);
         Task<List<CommentLike>> GetCommentLikesAsync(int commentId);
+        Task<Comment?> GetCommentWithDetailsAsync(int commentId);
         Task AddCommentLikeAsync(CommentLike commentLike);
         Task RemoveCommentLikeAsync(CommentLike commentLike);
 
