@@ -124,7 +124,7 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetPostLikeCountAsync(int postId)
+        public async Task<int> GetPostLikesCountAsync(int postId)
         {
             return await _db.PostLikes
                 .CountAsync(pl => pl.PostId == postId);
@@ -179,6 +179,12 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .FirstOrDefaultAsync(c => c.Id == commentId);
         }
 
+        public async Task<int> GetPostCommentsCountAsync(int postId)
+        {
+            return await _db.Comments
+                .CountAsync(c => c.PostId == postId);
+        }
+
         public async Task AddCommentAsync(Comment comment)
         {
             await _db.Comments.AddAsync(comment);
@@ -207,6 +213,12 @@ namespace Tbilink_BE.Infrastructure.Repositories
                 .Where(cl => cl.CommentId == commentId)
                 .OrderByDescending(cl => cl.LikedAt)
                 .ToListAsync();
+        }
+
+        public async Task<int> GetCommentLikesCountAsync(int commentId)
+        {
+            return await _db.CommentLikes
+                .CountAsync(cl => cl.CommentId == commentId);
         }
 
 

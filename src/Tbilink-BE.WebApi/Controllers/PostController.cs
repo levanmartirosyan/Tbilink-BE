@@ -163,16 +163,14 @@ namespace Tbilink_BE.WebApi.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpPut("comments/{commentId}/update")]
-        public async Task<IActionResult> UpdateComment(int commentId, [FromBody] UpdateCommentDTO updateCommentDto)
+        [HttpPut("comments/update")]
+        public async Task<IActionResult> UpdateComment([FromBody] UpdateCommentDTO updateCommentDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 return BadRequest("Invalid user ID in token");
             }
-
-            updateCommentDto.Id = commentId;
 
             var response = await _postService.UpdateCommentAsync(userId, updateCommentDto);
             return StatusCode(response.StatusCode, response);
@@ -188,6 +186,13 @@ namespace Tbilink_BE.WebApi.Controllers
             }
 
             var response = await _postService.DeleteCommentAsync(userId, commentId);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("{postId}/counts")]
+        public async Task<IActionResult> GetPostCounts(int postId)
+        {
+            var response = await _postService.GetPostCountsAsync(postId);
             return StatusCode(response.StatusCode, response);
         }
 

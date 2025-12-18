@@ -307,22 +307,26 @@ namespace Tbilink_BE.Application.Services.Implementations
         #endregion
 
         #region Like Methods
-        public async Task<ServiceResponse<string>> TogglePostLikeAsync(int postId, int userId)
+        public async Task<ServiceResponse<PostLikeToggleResponseDTO>> TogglePostLikeAsync(int postId, int userId)
         {
             try
             {
                 var post = await _postRepository.GetPostById(postId);
                 if (post == null)
                 {
-                    return ServiceResponse<string>.Fail(null, "Post not found.", 404);
+                    return ServiceResponse<PostLikeToggleResponseDTO>.Fail(
+                        null, "Post not found.", 404);
                 }
 
                 var existingLike = await _postRepository.GetPostLikeAsync(postId, userId);
+
+                bool isLikedByCurrentUser;
 
                 if (existingLike != null)
                 {
                     await _postRepository.RemovePostLikeAsync(existingLike);
                     post.LikeCount = Math.Max(0, post.LikeCount - 1);
+                    isLikedByCurrentUser = false;
                 }
                 else
                 {
@@ -335,26 +339,49 @@ namespace Tbilink_BE.Application.Services.Implementations
 
                     await _postRepository.AddPostLikeAsync(postLike);
                     post.LikeCount += 1;
-
-                    // Send notification to post owner (if not liking own post)
-                    //if (post.UserId != userId)
-                    //{
-                    //    await _notificationService.SendPostLikeNotificationAsync(post.UserId, userId, postId);
-                    //}
+                    isLikedByCurrentUser = true;
                 }
 
-                if (await _postRepository.SaveChangesAsync())
+                if (!await _postRepository.SaveChangesAsync())
                 {
-                    var action = existingLike != null ? "unliked" : "liked";
-                    return ServiceResponse<string>.Success(null, $"Post {action} successfully.");
+                    return ServiceResponse<PostLikeToggleResponseDTO>.Fail(
+                        null, "Failed to update post like.", 500);
                 }
 
-                return ServiceResponse<string>.Fail(null, "Failed to update post like.", 500);
+                var response = new PostLikeToggleResponseDTO
+                {
+                    IsLikedByCurrentUser = isLikedByCurrentUser,
+                    LikeCount = post.LikeCount
+                };
+
+                var action = isLikedByCurrentUser ? "liked" : "unliked";
+
+                return ServiceResponse<PostLikeToggleResponseDTO>.Success(
+                    response, $"Post {action} successfully.");
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiceResponse<string>.Fail(null, "An error occurred while updating post like.", 500);
+                return ServiceResponse<PostLikeToggleResponseDTO>.Fail(
+                    null, "An error occurred while updating post like.", 500);
             }
+        }
+
+        public async Task<ServiceResponse<CountsDTO>> GetPostCountsAsync(int postId)
+        {
+            var post = await _postRepository.GetPostById(postId);
+            if (post == null)
+                return ServiceResponse<CountsDTO>.Fail(null, "Post not found.", 404);
+
+            var likeCount = await _postRepository.GetPostLikesCountAsync(postId);
+            var commentCount = await _postRepository.GetPostCommentsCountAsync(postId);
+
+            var counts = new CountsDTO
+            {
+                LikeCount = likeCount,
+                CommentCount = commentCount
+            };
+
+            return ServiceResponse<CountsDTO>.Success(counts, "Counts retrieved successfully.");
         }
 
         #endregion
@@ -396,27 +423,30 @@ namespace Tbilink_BE.Application.Services.Implementations
             }
         }
 
-        public async Task<ServiceResponse<CommentDTO>> CreateCommentAsync(int userId, CreateCommentDTO createCommentDto)
+        public async Task<ServiceResponse<CreateCommentResponseDTO>> CreateCommentAsync(
+    int userId,
+    CreateCommentDTO createCommentDto
+)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(createCommentDto.Content))
                 {
-                    return ServiceResponse<CommentDTO>.Fail(
+                    return ServiceResponse<CreateCommentResponseDTO>.Fail(
                         null, "Comment content cannot be empty.", 400);
                 }
 
                 var post = await _postRepository.GetPostById(createCommentDto.PostId);
                 if (post == null)
                 {
-                    return ServiceResponse<CommentDTO>.Fail(
+                    return ServiceResponse<CreateCommentResponseDTO>.Fail(
                         null, "Post not found.", 404);
                 }
 
                 var userResponse = await _userService.GetUserInfoById(userId);
                 if (userResponse.Data == null)
                 {
-                    return ServiceResponse<CommentDTO>.Fail(
+                    return ServiceResponse<CreateCommentResponseDTO>.Fail(
                         null, "User not found.", 404);
                 }
 
@@ -435,7 +465,7 @@ namespace Tbilink_BE.Application.Services.Implementations
 
                 if (!await _postRepository.SaveChangesAsync())
                 {
-                    return ServiceResponse<CommentDTO>.Fail(
+                    return ServiceResponse<CreateCommentResponseDTO>.Fail(
                         null, "Failed to create comment.", 500);
                 }
 
@@ -458,60 +488,94 @@ namespace Tbilink_BE.Application.Services.Implementations
                         createdComment.Likes.Any(l => l.UserId == userId)
                 };
 
-                return ServiceResponse<CommentDTO>.Success(
-                    commentDto, "Comment created successfully.", 201);
+                var response = new CreateCommentResponseDTO
+                {
+                    Comment = commentDto,
+                    CommentCount = post.CommentCount
+                };
+
+                return ServiceResponse<CreateCommentResponseDTO>.Success(
+                    response, "Comment created successfully.", 201);
             }
             catch
             {
-                return ServiceResponse<CommentDTO>.Fail(
+                return ServiceResponse<CreateCommentResponseDTO>.Fail(
                     null, "An error occurred while creating comment.", 500);
             }
         }
 
-        public async Task<ServiceResponse<string>> UpdateCommentAsync(int userId, UpdateCommentDTO updateCommentDto)
+        public async Task<ServiceResponse<CommentDTO>> UpdateCommentAsync(int userId, UpdateCommentDTO updateCommentDto)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(updateCommentDto.Content))
                 {
-                    return ServiceResponse<string>.Fail(null, "Comment content cannot be empty.", 400);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "Comment content cannot be empty.", 400);
                 }
 
                 var comment = await _postRepository.GetCommentByIdAsync(updateCommentDto.Id);
                 if (comment == null)
                 {
-                    return ServiceResponse<string>.Fail(null, "Comment not found.", 404);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "Comment not found.", 404);
                 }
 
                 var currentUser = await _userService.GetUserInfoById(userId);
                 if (currentUser.Data == null)
                 {
-                    return ServiceResponse<string>.Fail(null, "User not found.", 404);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "User not found.", 404);
                 }
 
                 var isOwner = comment.UserId == userId;
-                var isAdminOrOwner = currentUser.Data.Role == "Admin" || currentUser.Data.Role == "Owner";
+                var isAdminOrOwner =
+                    currentUser.Data.Role == "Admin" || currentUser.Data.Role == "Owner";
 
                 if (!isOwner && !isAdminOrOwner)
                 {
-                    return ServiceResponse<string>.Fail(null, "You are not allowed to edit this comment.", 403);
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "You are not allowed to edit this comment.", 403);
                 }
 
                 comment.Content = updateCommentDto.Content.Trim();
                 _postRepository.UpdateComment(comment);
 
-                if (await _postRepository.SaveChangesAsync())
+                if (!await _postRepository.SaveChangesAsync())
                 {
-                    return ServiceResponse<string>.Success(null, "Comment updated successfully.");
+                    return ServiceResponse<CommentDTO>.Fail(
+                        null, "Failed to update comment.", 500);
                 }
 
-                return ServiceResponse<string>.Fail(null, "Failed to update comment.", 500);
+                var updatedComment =
+                    await _postRepository.GetCommentWithDetailsAsync(comment.Id);
+
+                var commentDto = new CommentDTO
+                {
+                    Id = updatedComment.Id,
+                    PostId = updatedComment.PostId,
+                    UserId = updatedComment.UserId,
+                    UserName = updatedComment.User.UserName,
+                    FirstName = updatedComment.User.FirstName,
+                    LastName = updatedComment.User.LastName,
+                    Avatar = updatedComment.User.ProfilePhotoUrl,
+                    Content = updatedComment.Content,
+                    CreatedAt = updatedComment.CreatedAt,
+                    LikeCount = updatedComment.LikeCount,
+                    IsLikedByCurrentUser =
+                        updatedComment.Likes.Any(l => l.UserId == userId)
+                };
+
+                return ServiceResponse<CommentDTO>.Success(
+                    commentDto, "Comment updated successfully.");
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiceResponse<string>.Fail(null, "An error occurred while updating comment.", 500);
+                return ServiceResponse<CommentDTO>.Fail(
+                    null, "An error occurred while updating comment.", 500);
             }
         }
+
 
         public async Task<ServiceResponse<string>> DeleteCommentAsync(int userId, int commentId)
         {
@@ -560,22 +624,29 @@ namespace Tbilink_BE.Application.Services.Implementations
         #endregion
 
         #region Comment Like Methods
-        public async Task<ServiceResponse<string>> ToggleCommentLikeAsync(int commentId, int userId)
+        public async Task<ServiceResponse<CommentLikeToggleResponseDTO>> ToggleCommentLikeAsync(
+            int commentId,
+            int userId
+        )
         {
             try
             {
                 var comment = await _postRepository.GetCommentByIdAsync(commentId);
                 if (comment == null)
                 {
-                    return ServiceResponse<string>.Fail(null, "Comment not found.", 404);
+                    return ServiceResponse<CommentLikeToggleResponseDTO>.Fail(
+                        null, "Comment not found.", 404);
                 }
 
                 var existingLike = await _postRepository.GetCommentLikeAsync(commentId, userId);
+
+                bool isLikedByCurrentUser;
 
                 if (existingLike != null)
                 {
                     await _postRepository.RemoveCommentLikeAsync(existingLike);
                     comment.LikeCount = Math.Max(0, comment.LikeCount - 1);
+                    isLikedByCurrentUser = false;
                 }
                 else
                 {
@@ -588,29 +659,39 @@ namespace Tbilink_BE.Application.Services.Implementations
 
                     await _postRepository.AddCommentLikeAsync(commentLike);
                     comment.LikeCount += 1;
+                    isLikedByCurrentUser = true;
 
-                    // Send notification to comment owner (if not liking own comment)
-                    //if (comment.UserId != userId)
-                    //{
+                    // Notification (optional)
+                    // if (comment.UserId != userId)
                     //    await _notificationService.SendCommentLikeNotificationAsync(comment.UserId, userId, comment.PostId, commentId);
-                    //}
                 }
 
                 _postRepository.UpdateComment(comment);
 
-                if (await _postRepository.SaveChangesAsync())
+                if (!await _postRepository.SaveChangesAsync())
                 {
-                    var action = existingLike != null ? "unliked" : "liked";
-                    return ServiceResponse<string>.Success(null, $"Comment {action} successfully.");
+                    return ServiceResponse<CommentLikeToggleResponseDTO>.Fail(
+                        null, "Failed to update comment like.", 500);
                 }
 
-                return ServiceResponse<string>.Fail(null, "Failed to update comment like.", 500);
+                var response = new CommentLikeToggleResponseDTO
+                {
+                    IsLikedByCurrentUser = isLikedByCurrentUser,
+                    LikeCount = comment.LikeCount
+                };
+
+                var action = isLikedByCurrentUser ? "liked" : "unliked";
+
+                return ServiceResponse<CommentLikeToggleResponseDTO>.Success(
+                    response, $"Comment {action} successfully.");
             }
-            catch (Exception ex)
+            catch
             {
-                return ServiceResponse<string>.Fail(null, "An error occurred while updating comment like.", 500);
+                return ServiceResponse<CommentLikeToggleResponseDTO>.Fail(
+                    null, "An error occurred while updating comment like.", 500);
             }
         }
+
 
         #endregion
     }
