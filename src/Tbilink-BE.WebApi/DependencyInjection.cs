@@ -1,5 +1,4 @@
 ﻿using Microsoft.OpenApi.Models;
-using Tbilink_BE.Models;
 using Tbilink_BE.WebApi.signalR;
 
 namespace Tbilink_BE.WebApi

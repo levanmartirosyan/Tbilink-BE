@@ -17,6 +17,7 @@ namespace Tbilink_BE.Data
         public DbSet<PostLike> PostLikes { get; set; }
         public DbSet<CommentLike> CommentLikes { get; set; }
         public DbSet<UserFollow> UserFollows { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
@@ -115,6 +116,24 @@ namespace Tbilink_BE.Data
                       .WithMany(u => u.Followers)
                       .HasForeignKey(uf => uf.FollowedId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(n => n.Id);
+
+                entity.HasOne(n => n.Recipient)
+                      .WithMany()
+                      .HasForeignKey(n => n.RecipientId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(n => n.Actor)
+                      .WithMany()
+                      .HasForeignKey(n => n.ActorId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.Property(n => n.Type)
+                      .HasConversion<int>(); 
             });
         }
 

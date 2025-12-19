@@ -22,6 +22,8 @@ namespace Tbilink_BE.Application
             builder.Services.AddScoped<ITokenProvider, TokenProvider>();
             builder.Services.AddScoped<IPostService, PostService>();
             builder.Services.AddScoped<IMessageService, MessageService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
             builder.Services.Configure<SupabaseOptions>(builder.Configuration.GetSection("SupabaseStorage"));
 

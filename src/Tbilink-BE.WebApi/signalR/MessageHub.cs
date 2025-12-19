@@ -50,7 +50,7 @@ namespace Tbilink_BE.WebApi.signalR
 
                 await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
 
-                await MarkMessagesAsRead(recipientId);
+                //await MarkMessagesAsRead(recipientId);
 
                 _logger.LogInformation("User {UserId} connected to message group {GroupName}", currentUserId, groupName);
             }
@@ -138,6 +138,83 @@ namespace Tbilink_BE.WebApi.signalR
             {
                 _logger.LogError(ex, "Error sending message from user {UserId}", Context.UserIdentifier);
                 throw new HubException("Failed to send message");
+            }
+        }
+
+        public async Task EditMessage(int messageId, string newContent)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var message = await _messageRepository.GetMessageAsync(messageId);
+
+                if (message == null)
+                    throw new HubException("Message not found");
+
+                if (message.SenderId != userId)
+                    throw new HubException("You can only edit your own messages");
+
+                message.Content = newContent;
+
+                if (await _messageRepository.SaveChangesAsync())
+                {
+                    var groupName = GetGroupName(message.SenderId.ToString(), message.RecipientId.ToString());
+                    await Clients.Group(groupName).SendAsync("MessageEdited", new
+                    {
+                        MessageId = message.Id,
+                        NewContent = newContent
+                    });
+                }
+                else
+                {
+                    throw new HubException("Failed to edit message");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error editing message {MessageId} by user {UserId}", messageId, Context.UserIdentifier);
+                throw new HubException("Failed to edit message");
+            }
+        }
+
+        public async Task DeleteMessage(int messageId)
+        {
+            try
+            {
+                var userId = GetUserId();
+                var message = await _messageRepository.GetMessageAsync(messageId);
+
+                if (message == null)
+                    throw new HubException("Message not found");
+
+                if (message.SenderId != userId && message.RecipientId != userId)
+                    throw new HubException("You can only delete your own messages");
+
+                if (message.SenderId == userId)
+                    message.SenderDeleted = true;
+                if (message.RecipientId == userId)
+                    message.RecipientDeleted = true;
+
+                if (message.SenderDeleted && message.RecipientDeleted)
+                    _messageRepository.DeleteMessage(message);
+
+                if (await _messageRepository.SaveChangesAsync())
+                {
+                    var groupName = GetGroupName(message.SenderId.ToString(), message.RecipientId.ToString());
+                    await Clients.Group(groupName).SendAsync("MessageDeleted", new
+                    {
+                        MessageId = message.Id
+                    });
+                }
+                else
+                {
+                    throw new HubException("Failed to delete message");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting message {MessageId} by user {UserId}", messageId, Context.UserIdentifier);
+                throw new HubException("Failed to delete message");
             }
         }
 

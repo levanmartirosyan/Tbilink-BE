@@ -33,6 +33,8 @@ namespace Tbilink_BE.Infrastructure
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IPostRepository, PostRepository>();
             builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 
             builder.Services.AddSignalR();
 

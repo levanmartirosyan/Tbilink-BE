@@ -11,11 +11,13 @@ namespace Tbilink_BE.Application.Services.Implementations
     {
         private readonly IPostRepository _postRepository;
         private readonly IUserService _userService;
+        private readonly INotificationService _notificationService;
 
-        public PostService(IPostRepository postRepository, IUserService userService)
+        public PostService(IPostRepository postRepository, IUserService userService, INotificationService notificationService)
         {
             _postRepository = postRepository;
             _userService = userService;
+            _notificationService = notificationService;
         }
 
         #region Post Methods
@@ -355,6 +357,11 @@ namespace Tbilink_BE.Application.Services.Implementations
                 };
 
                 var action = isLikedByCurrentUser ? "liked" : "unliked";
+
+                if (isLikedByCurrentUser && post.UserId != userId)
+                {
+                    await _notificationService.SendPostLikeNotificationAsync(post.UserId, userId, post.Id);
+                }
 
                 return ServiceResponse<PostLikeToggleResponseDTO>.Success(
                     response, $"Post {action} successfully.");
