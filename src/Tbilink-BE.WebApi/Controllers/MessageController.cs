@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Tbilink_BE.Application.DTOs;
 using Tbilink_BE.Application.Services.Interfaces;
+using Tbilink_BE.WebApi.Attributes;
 
 namespace Tbilink_BE.WebApi.Controllers
 {
     [Authorize]
+    [CheckUserBanned]
     [Route("api/message")]
     [ApiController]
     public class MessageController : ControllerBase

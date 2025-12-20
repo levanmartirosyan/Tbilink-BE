@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tbilink_BE.Data;
@@ -11,9 +12,11 @@ using Tbilink_BE.Data;
 namespace Tbilink_BE.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251220163842_AddedBans")]
+    partial class AddedBans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -546,13 +549,13 @@ namespace Tbilink_BE.Infrastructure.Migrations
                     b.HasOne("Tbilink_BE.Models.User", "Recipient")
                         .WithMany("MessageReceived")
                         .HasForeignKey("RecipientId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Tbilink_BE.Models.User", "Sender")
                         .WithMany("MessageSent")
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Group");
@@ -647,7 +650,7 @@ namespace Tbilink_BE.Infrastructure.Migrations
                     b.HasOne("Tbilink_BE.Models.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Post");

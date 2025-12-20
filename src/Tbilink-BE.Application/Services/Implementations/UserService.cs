@@ -258,6 +258,11 @@ namespace Tbilink_BE.Application.Services.Implementations
                         targetUser.TimeZone = updateUserDto.TimeZone.Trim();
                 }
 
+                if (!string.IsNullOrWhiteSpace(updateUserDto.Role) && IsAdminOrOwner(currentUser))
+                {
+                    targetUser.Role = updateUserDto.Role.Trim();
+                }
+
                 _userRepository.UpdateUser(targetUser);
 
                 if (!await _userRepository.SaveChangesAsync())

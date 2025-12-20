@@ -53,6 +53,11 @@ namespace Tbilink_BE.Services.Implementations
                 return ServiceResponse<LoginResultDto>.Fail(null, "Invalid Email or Password.");
             }
 
+            if (userExist.IsBanned)
+            {
+                return ServiceResponse<LoginResultDto>.Fail(null, "User is banned.", 403);
+            }
+
             var userNotVerified = new UserDTO
             {
                 Email = userExist.Email,
@@ -240,27 +245,28 @@ namespace Tbilink_BE.Services.Implementations
 
             var userExists = await _userRepository.GetUserByEmail(sendVerificationCodeDTO.Email.Trim());
 
-            // Handle different scenarios based on code type
+            if (userExists != null && userExists.IsBanned)
+            {
+                return ServiceResponse<string>.Fail(null, "User is banned.", 403);
+            }
+
             User targetUser = null;
             int userId;
 
             switch (sendVerificationCodeDTO.CodeType)
             {
                 case CodeType.EmailChange:
-                    // For email change, we need the current user ID
                     if (!sendVerificationCodeDTO.CurrentUserId.HasValue)
                     {
                         return ServiceResponse<string>.Fail(null, "Current user ID is required for email change.", 400);
                     }
 
-                    // Get the current user (the one changing their email)
                     var currentUser = await _userRepository.GetUserById(sendVerificationCodeDTO.CurrentUserId.Value);
                     if (currentUser == null)
                     {
                         return ServiceResponse<string>.Fail(null, "Current user not found.", 404);
                     }
 
-                    // Check if the new email is already in use by another user
                     if (userExists != null && userExists.Id != currentUser.Id)
                     {
                         return ServiceResponse<string>.Fail(null, "Email is already in use by another user.", 409);
@@ -272,7 +278,6 @@ namespace Tbilink_BE.Services.Implementations
 
                 case CodeType.EmailVerification:
                 case CodeType.PasswordRecovery:
-                    // For these operations, the user must exist
                     if (userExists == null)
                     {
                         return ServiceResponse<string>.Fail(null, "User not found.", 404);
@@ -291,7 +296,6 @@ namespace Tbilink_BE.Services.Implementations
                     return ServiceResponse<string>.Fail(null, "Invalid code type.", 400);
             }
 
-            // Remove any existing verification records for this user
             var existingRecord = await _authRepository.GetEmailVerificationRecords(userId);
 
             if (existingRecord != null)
@@ -358,6 +362,11 @@ namespace Tbilink_BE.Services.Implementations
             var normalizedEmail = email.Trim();
 
             var userByEmail = await _userRepository.GetUserByEmail(normalizedEmail);
+
+            if (userByEmail != null && userByEmail.IsBanned)
+            {
+                return ServiceResponse<EmailVerificationResultDTO>.Fail(null, "User is banned.", 403);
+            }
 
             EmailVerification record;
             int recordUserId;
@@ -449,6 +458,11 @@ namespace Tbilink_BE.Services.Implementations
             if ( userExist == null )
             {
                 return ServiceResponse<CreateNewPasswordDTO>.Fail(null, "Email not found.", 404);
+            }
+
+            if (userExist.IsBanned)
+            {
+                return ServiceResponse<CreateNewPasswordDTO>.Fail(null, "User is banned.", 403);
             }
 
             var record = await _authRepository.GetEmailVerificationRecords(userExist.Id);

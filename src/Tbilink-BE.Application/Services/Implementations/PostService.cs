@@ -358,10 +358,10 @@ namespace Tbilink_BE.Application.Services.Implementations
 
                 var action = isLikedByCurrentUser ? "liked" : "unliked";
 
-                if (isLikedByCurrentUser && post.UserId != userId)
-                {
-                    await _notificationService.SendPostLikeNotificationAsync(post.UserId, userId, post.Id);
-                }
+                //if (isLikedByCurrentUser && post.UserId != userId)
+                //{
+                //    await _notificationService.SendPostLikeNotificationAsync(post.UserId, userId, post.Id);
+                //}
 
                 return ServiceResponse<PostLikeToggleResponseDTO>.Success(
                     response, $"Post {action} successfully.");

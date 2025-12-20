@@ -67,6 +67,8 @@ namespace Tbilink_BE.Models
         // Online/Activity
         public bool IsOnline { get; set; } = false;
         public DateTime? LastActive { get; set; }
-    }
 
+        public bool IsBanned { get; set; } = false;
+        public List<UserBan> BanHistory { get; set; } = new List<UserBan>();
+    }
 }

@@ -12,6 +12,7 @@
         public string? ProfilePhotoUrl { get; set; }
         public string? CoverPhotoUrl { get; set; }
         public string? Description { get; set; }
+        public string? Role { get; set; }
 
         // Privacy Settings
         public bool? IsPublicProfile { get; set; }

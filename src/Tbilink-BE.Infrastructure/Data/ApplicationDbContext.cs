@@ -19,6 +19,8 @@ namespace Tbilink_BE.Data
         public DbSet<UserFollow> UserFollows { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
+        public DbSet<UserBan> UserBans { get; set; }
+
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
             
@@ -49,17 +51,17 @@ namespace Tbilink_BE.Data
                 .HasOne(c => c.User)
                 .WithMany(u => u.Comments)
                 .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
                 .WithMany(u => u.MessageSent)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Recipient)
                 .WithMany(u => u.MessageReceived)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<PostLike>(entity =>
             {
@@ -135,6 +137,18 @@ namespace Tbilink_BE.Data
                 entity.Property(n => n.Type)
                       .HasConversion<int>(); 
             });
+
+            modelBuilder.Entity<UserBan>()
+                    .HasOne(b => b.User)
+                    .WithMany(u => u.BanHistory)
+                    .HasForeignKey(b => b.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserBan>()
+                    .HasOne(b => b.BannedBy)
+                    .WithMany()
+                    .HasForeignKey(b => b.BannedById)
+                    .OnDelete(DeleteBehavior.SetNull);
         }
 
     }
