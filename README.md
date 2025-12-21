@@ -18,7 +18,7 @@ Swagger / Swashbuckle (API documentation)
 ⚙️ Getting Started
 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/levanmartirosyan/Tbilink-Back.git
+git clone https://github.com/levanmartirosyan/Tbilink-BE.git
 cd Tbilink-Back
 ```
 
